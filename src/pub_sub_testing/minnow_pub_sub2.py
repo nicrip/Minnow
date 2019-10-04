@@ -5,12 +5,14 @@ import sys
 import zmq
 import time
 import signal
+from collections import deque
 from threading import Thread
 
 class Subscribe(Thread):
-    def __init__(self, context, id, topic):
+    def __init__(self, context, deque, id, topic):
         super().__init__()
         self.context = context
+        self.deque = deque
         self.id = id
         self.topic = topic
         self.loop = False
@@ -28,6 +30,7 @@ class Subscribe(Thread):
             if evts:
                 message = subscriber.recv()
                 print('subscriber {}: {}'.format(self.id, message))
+                self.deque.append(message)
 
     def stop(self):
         self.loop = False
@@ -35,6 +38,7 @@ class Subscribe(Thread):
 class Publish:
     def __init__(self):
         signal.signal(signal.SIGINT, self.exit_signal)
+        self.data_queue = deque(maxlen=1)
         self.zmq_context = zmq.Context()
         self.subscribers = []
         self.subscribe()
@@ -48,7 +52,7 @@ class Publish:
         sys.exit(0)
 
     def subscribe(self):
-        sub0 = Subscribe(self.zmq_context, 0, 'POS')
+        sub0 = Subscribe(self.zmq_context, self.data_queue, 0, 'POS')
         self.subscribers.append(sub0)
         sub0.start()
 
@@ -59,6 +63,8 @@ class Publish:
         while True:
             socket.send_string('NAV' + time.strftime('%H:%M:%S'))
             socket.send_string('PRESS' + time.strftime('%H:%M:%S'))
+            if len(self.data_queue) > 0:
+                print(self.data_queue.pop())
 
 if __name__ == "__main__":
     pub = Publish()
