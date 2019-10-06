@@ -8,20 +8,19 @@ import signal
 from collections import deque
 from threading import Thread
 
-class Subscribe(Thread):
-    def __init__(self, context, deque, id, topic):
+class Subscriber(Thread):
+    def __init__(self, context, id, topics_callbacks):
         super().__init__()
         self.context = context
-        self.deque = deque
-        self.id = id
-        self.topic = topic
+        self.topics_callbacks = topics_callbacks
         self.loop = False
 
     def run(self):
-        print('starting subscriber {}, on topic {}'.format(self.id, self.topic))
+        print('starting subscriber, on topic(s) {}'.format(self.topics_callbacks.keys()))
         subscriber = self.context.socket(zmq.SUB)
         subscriber.connect("tcp://127.0.0.1:5555")
-        subscriber.setsockopt_string(zmq.SUBSCRIBE, self.topic)
+        for topic in self.topics_callbacks.keys():
+            subscriber.setsockopt_string(zmq.SUBSCRIBE, topic)
         poller = zmq.Poller()
         poller.register(subscriber, zmq.POLLIN)
         self.loop = True
@@ -29,42 +28,48 @@ class Subscribe(Thread):
             evts = poller.poll(1000)
             if evts:
                 message = subscriber.recv()
-                print('subscriber {}: {}'.format(self.id, message))
-                self.deque.append(message)
+                for topic in self.topics_callbacks.keys():
+                    if topic in str(message):
+                        self.topics_callbacks[topic](message)
 
     def stop(self):
         self.loop = False
 
-class Publish:
+class Publisher:
     def __init__(self):
         signal.signal(signal.SIGINT, self.exit_signal)
         self.data_queue = deque(maxlen=1)
         self.zmq_context = zmq.Context()
-        self.subscribers = []
-        self.subscribe()
-        self.run()
+        self.setup_subscriber()
+        self.pos_msg = None
 
     def exit_signal(self, sig, frame):
         print('You pressed Ctrl+C!')
-        for subscriber in self.subscribers:
-            print('stopping subscriber {}'.format(subscriber.id))
-            subscriber.stop()
+        self.subscriber.stop()
+        time.sleep(1)
+        self.subscriber.join()
         sys.exit(0)
 
-    def subscribe(self):
-        sub0 = Subscribe(self.zmq_context, self.data_queue, 0, 'POS')
-        self.subscribers.append(sub0)
-        sub0.start()
+    def setup_subscriber(self):
+        self.subscriber = Subscriber(self.zmq_context, 0, {'POS':self.pos_callback})
+        self.subscriber.start()
+
+    def pos_callback(self, msg):
+        self.pos_msg = msg
 
     def run(self):
         socket = self.zmq_context.socket(zmq.PUB)
         socket.connect("tcp://127.0.0.1:5556")
 
+        count = 0
         while True:
-            socket.send_string('NAV' + time.strftime('%H:%M:%S'))
-            socket.send_string('PRESS' + time.strftime('%H:%M:%S'))
-            if len(self.data_queue) > 0:
-                print(self.data_queue.pop())
+            count += 1
+            socket.send_string('NAV_' + str(count))
+            socket.send_string('PRESS_' + str(count))
+            if count%100 == 0:
+                print(self.pos_msg)
+            time.sleep(0.0001)
 
 if __name__ == "__main__":
-    pub = Publish()
+    pub = Publisher()
+    pub.run()
