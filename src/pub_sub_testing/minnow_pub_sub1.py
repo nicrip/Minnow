@@ -5,6 +5,7 @@ import sys
 import zmq
 import time
 import signal
+from collections import deque
 from threading import Thread
 
 class Subscriber(Thread):
@@ -30,13 +31,14 @@ class Subscriber(Thread):
                 for topic in self.topics_callbacks.keys():
                     if topic in str(message):
                         self.topics_callbacks[topic](message)
-
+                        
     def stop(self):
         self.loop = False
 
 class Publisher:
     def __init__(self):
         signal.signal(signal.SIGINT, self.exit_signal)
+        self.data_queue = deque(maxlen=1)
         self.zmq_context = zmq.Context()
         self.setup_subscriber()
         self.nav_msg = None

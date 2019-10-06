@@ -5,6 +5,7 @@ import sys
 import zmq
 import time
 import signal
+from collections import deque
 from threading import Thread
 
 class Subscriber(Thread):
@@ -37,6 +38,7 @@ class Subscriber(Thread):
 class Publisher:
     def __init__(self):
         signal.signal(signal.SIGINT, self.exit_signal)
+        self.data_queue = deque(maxlen=1)
         self.zmq_context = zmq.Context()
         self.setup_subscriber()
         self.pos_msg = None
