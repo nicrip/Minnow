@@ -59,21 +59,21 @@ class Publisher:
                 yaw   += 13.8 # Declination at Danville, California is 13 degrees 48 minutes and 47 seconds on 2014-04-04
                 if yaw < 0: yaw   += 360.0  # Ensure yaw stays between 0 and 360
                 roll  *= 180.0 / math.pi
-                print('roll, pitch, yaw: {}'.format(roll,pitch,yaw))
+                print('roll, pitch, yaw: {:2.2f}, {:2.2f}, {:2.2f}'.format(roll,pitch,yaw))
 
             if self.em7180.gotAccelerometer():
                 ax,ay,az = self.em7180.readAccelerometer()
-                print('accel: {}'.format(ax,ay,az))
+                print('accel: {:3.3f}, {:3.3f}, {:3.3f}'.format(ax,ay,az))
 
             if self.em7180.gotGyrometer():
                 gx,gy,gz = self.em7180.readGyrometer()
-                print('gyro: {}'.format(gx,gy,gz))
+                print('gyro: {:3.3f}, {:3.3f}, {:3.3f}'.format(gx,gy,gz))
 
             if self.em7180.gotBarometer():
                 pressure, temperature = self.em7180.readBarometer()
                 print('baro:')
-                print('  temperature: {}'.format(temperature))
-                print('  temperature: {} mbar'.format(pressure))
+                print('  temperature: {:2.2f} C'.format(temperature))
+                print('  temperature: {:2.2f} mbar'.format(pressure))
 
             time.sleep(.001)
 
