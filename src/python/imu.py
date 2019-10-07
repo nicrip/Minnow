@@ -94,7 +94,7 @@ class Publisher:
             imu_msg = topics.nav.imu.imuEnd(self.fb_builder)
             self.fb_builder.Finish(imu_msg)
             bin_imu_msg = self.fb_builder.Output()
-            socket.send('nav.imu' + b' ' + price_bytes)
+            socket.send(b'nav.imu' + b' ' + bin_imu_msg)
 
             time.sleep(.01)
 
