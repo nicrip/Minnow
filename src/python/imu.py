@@ -18,6 +18,8 @@ class Publisher:
         signal.signal(signal.SIGINT, self.exit_signal)
         self.data_queue = deque(maxlen=1)
         self.zmq_context = zmq.Context()
+        #setup flatbuffers
+        self.fb_builder = flatbuffers.Builder(1024)
         #setup IMU
         self.MAG_RATE       = 100  # Hz
         self.ACCEL_RATE     = 200  # Hz
@@ -48,6 +50,9 @@ class Publisher:
                 print('IMU runtime error: ' + self.em7180.getErrorString())
                 exit(1)
 
+            topics.nav.imuStart(self.fb_builder)
+            topics.nav.imuAddTime(self.fb_builder, time.time())
+
             if (self.em7180.gotQuaternion()):
                 qw, qx, qy, qz = self.em7180.readQuaternion()
                 roll  = math.atan2(2.0 * (qw * qx + qy * qz), qw * qw - qx * qx - qy * qy + qz * qz)
@@ -60,22 +65,38 @@ class Publisher:
                 if yaw < 0: yaw   += 360.0  # Ensure yaw stays between 0 and 360
                 roll  *= 180.0 / math.pi
                 print('roll, pitch, yaw: {:2.2f}, {:2.2f}, {:2.2f}'.format(roll,pitch,yaw))
+                topics.nav.imuAddRoll(self.fb_builder, roll)
+                topics.nav.imuAddPitch(self.fb_builder, pitch)
+                topics.nav.imuAddYaw(self.fb_builder, yaw)
 
             if self.em7180.gotAccelerometer():
                 ax,ay,az = self.em7180.readAccelerometer()
                 print('accel: {:3.3f}, {:3.3f}, {:3.3f}'.format(ax,ay,az))
+                topics.nav.imuAddAccelX(self.fb_builder, ax)
+                topics.nav.imuAddAccelY(self.fb_builder, ay)
+                topics.nav.imuAddAccelZ(self.fb_builder, az)
 
             if self.em7180.gotGyrometer():
                 gx,gy,gz = self.em7180.readGyrometer()
                 print('gyro: {:3.3f}, {:3.3f}, {:3.3f}'.format(gx,gy,gz))
+                topics.nav.imuAddGyroX(self.fb_builder, gx)
+                topics.nav.imuAddGyroY(self.fb_builder, gy)
+                topics.nav.imuAddGyroZ(self.fb_builder, gz)
 
             if self.em7180.gotBarometer():
                 pressure, temperature = self.em7180.readBarometer()
                 print('baro:')
                 print('  temperature: {:2.2f} C'.format(temperature))
-                print('  temperature: {:2.2f} mbar'.format(pressure))
+                print('  pressure: {:2.2f} mbar'.format(pressure))
+                topics.nav.imuAddTemp(self.fb_builder, temperature)
+                topics.nav.imuAddPressure(self.fb_builder, pressure)
 
-            time.sleep(.001)
+            imu_msg = topics.nav.imuEnd(self.fb_builder)
+            self.fb_builder.Finish(imu_msg)
+            bin_imu_msg = self.fb_builder.Output()
+            socket.send('nav.imu' + b' ' + price_bytes)
+
+            time.sleep(.01)
 
 if __name__ == "__main__":
     pub = Publisher()
