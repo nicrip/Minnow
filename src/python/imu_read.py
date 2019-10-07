@@ -71,17 +71,12 @@ class Publisher:
         while True:
             count += 1
             if count%100 == 0 and self.nav_imu_msg is not None:
-                nav_time = self.nav_imu_msg.Time()
-                nav_roll = self.nav_imu_msg.Roll()
-                nav_pitch = self.nav_imu_msg.Pitch()
-                nav_yaw = self.nav_imu_msg.Yaw()
-                nav_pressure = self.nav_imu_msg.Pressure()
-                nav_temp = self.nav_imu_msg.Temp()
-                print(nav_time)
-                print(nav_roll, nav_pitch, nav_yaw)
-                print(nav_pressure)
-                print(nav_temp)
-                print('')
+                try:
+                    print(self.nav_imu_msg.Time())
+                    print(self.nav_imu_msg.Roll(), self.nav_imu_msg.Pitch(), self.nav_imu_msg.Yaw())
+                    print(self.nav_imu_msg.Pressure(), self.nav_imu_msg.Temp())
+                except:
+                    pass
             time.sleep(0.0001)
 
 if __name__ == "__main__":
