@@ -70,7 +70,7 @@ class Publisher:
         count = 0
         while True:
             count += 1
-            if count%100 == 0:
+            if count%100 == 0 and self.nav_imu_msg is not None:
                 print(self.nav_imu_msg.Time())
                 print(self.nav_imu_msg.Roll(), self.nav_imu_msg.Pitch(), self.nav_imu_msg.Yaw())
             time.sleep(0.0001)
