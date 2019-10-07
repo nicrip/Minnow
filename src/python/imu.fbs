@@ -1,18 +1,18 @@
 namespace topics.nav;
 
 table imu {
-  time:float;
-  roll:float;
-  pitch:float;
-  yaw:float;
-  accel_x:float;
-  accel_y:float;
-  accel_z:float;
-  gyro_x:float;
-  gyro_y:float;
-  gyro_z:float;
-  pressure:float;
-  temp:float;
+  time:double;
+  roll:double;
+  pitch:double;
+  yaw:double;
+  accel_x:double;
+  accel_y:double;
+  accel_z:double;
+  gyro_x:double;
+  gyro_y:double;
+  gyro_z:double;
+  pressure:double;
+  temp:double;
 }
 
 root_type imu;
