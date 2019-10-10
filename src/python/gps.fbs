@@ -1,0 +1,21 @@
+namespace topics.nav;
+
+table gps {
+  time:double;
+  mode:ushort;
+  longitude:double;
+  latitude:double;
+  altitude:double;
+  utc:float;
+  time_to_first_fix:int;
+  num_satellites:short;
+  speed:double;
+  heading:double;
+  accuracy:double;
+  eastings:double;
+  northings:double;
+  utm_zone:int;
+  mag_declination:double;
+}
+
+root_type gps;
