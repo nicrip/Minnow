@@ -106,21 +106,21 @@ class Publisher:
                     self.ms5837.pressure(MS5837.UNITS_atm),
                     self.ms5837.pressure(MS5837.UNITS_Torr),
                     self.ms5837.pressure(MS5837.UNITS_psi))
-                    topics.nav.depth.imuAddPressure(self.fb_builder, self.ms5837.pressure(MS5837.UNITS_atm))
+                    topics.nav.depth.depthAddPressure(self.fb_builder, self.ms5837.pressure(MS5837.UNITS_atm))
 
                     print("Temperature: %.2f C  %.2f F  %.2f K") % (
                     self.ms5837.temperature(MS5837.UNITS_Centigrade),
                     self.ms5837.temperature(MS5837.UNITS_Farenheit),
                     self.ms5837.temperature(MS5837.UNITS_Kelvin))
-                    topics.nav.depth.imuAddTemp(self.fb_builder, self.ms5837.temperature(MS5837.UNITS_Centigrade))
+                    topics.nav.depth.depthAddTemp(self.fb_builder, self.ms5837.temperature(MS5837.UNITS_Centigrade))
 
                     self.ms5837.setFluidDensity(MS5837.DENSITY_FRESHWATER)
                     freshwater_depth = self.ms5837.depth(self.static_pressure)  # default is freshwater
                     self.ms5837.setFluidDensity(MS5837.DENSITY_SALTWATER)
                     saltwater_depth = self.ms5837.depth(self.static_pressure)
                     print("Depth: %.3f m (freshwater)  %.3f m (saltwater)") % (freshwater_depth, saltwater_depth)
-                    topics.nav.depth.imuAddDepthFresh(self.fb_builder, freshwater_depth)
-                    topics.nav.depth.imuAddDepthSalt(self.fb_builder, saltwater_depth)
+                    topics.nav.depth.depthAddDepthFresh(self.fb_builder, freshwater_depth)
+                    topics.nav.depth.depthAddDepthSalt(self.fb_builder, saltwater_depth)
 
                     depth_msg = topics.nav.depth.depthEnd(self.fb_builder)
                     self.fb_builder.Finish(depth_msg)
