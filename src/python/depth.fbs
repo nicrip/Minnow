@@ -1,0 +1,11 @@
+namespace topics.nav;
+
+table depth {
+  time:double;
+  temp:double;
+  pressure:double;
+  depth_fresh:double;
+  depth_salt:double;
+}
+
+root_type depth;
