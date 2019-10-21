@@ -8,11 +8,11 @@ from minnow_low_level_control.SurgeSpeedControl import *
 class control_system_manager:
 	
 	# This is for standalone troubleshooting of the python code ---------------------
-	desired_speed = 1.0
+	desired_speed = 0.0
 	desired_heading = -160.0	# between -180 and 180 (i.e. 181 = -179)
 	desired_pitch = 0.0
 
-	current_speed = 1.0
+	current_speed = 0.0
 	current_heading = 170
 	current_pitch = -2.0
 	# -------------------------------------------------------------------------------
