@@ -50,6 +50,8 @@ class Publisher:
         signal.signal(signal.SIGINT, self.exit_signal)
         self.zmq_context = zmq.Context()
         self.setup_subscriber()
+        #setup flatbuffers
+        self.fb_builder = flatbuffers.Builder(1024)
         self.motor_command_msg = None
         self.motor_1_command = 0.0
         self.motor_2_command = 0.0
@@ -58,10 +60,10 @@ class Publisher:
         PWM.start("P9_21", 3, 2000) #motor 1 beaglebone PWM pin
         PWM.start("P9_22", 3, 2000) #motor 2 beaglebone PWM pin
         PWM.start("P9_16", 3, 2000) #motor 3 beaglebone PWM pin
-        self.pwm_min = 2.8
-        self.pwm_max = 3.2
-        self.command_min = -100.0
-        self.command_max = 100.0
+        self.pwm_min = 2.5
+        self.pwm_max = 3.5
+        self.command_min = -80.0
+        self.command_max = 80.0
         time.sleep(10.0)
 
     def exit_signal(self, sig, frame):
@@ -84,7 +86,7 @@ class Publisher:
 
     def map_command_to_pwm(self, command):
         command_scale = (command - self.command_min)/(self.command_max - self.command_min)
-        pwm_val = command_scale*(pwm_max - pwm_min) + pwm_min
+        pwm_val = command_scale*(self.pwm_max - self.pwm_min) + self.pwm_min
         return pwm_val
 
     def run(self):
@@ -127,7 +129,10 @@ class Publisher:
             self.fb_builder.Finish(value_msg)
             bin_value_msg = self.fb_builder.Output()
             socket.send(b'motor.value' + b' ' + bin_value_msg)
-
+            print(motor_1_pwm)
+            print(motor_2_pwm)
+            print(motor_3_pwm)
+            print('')
             time.sleep(.1)
 
 if __name__ == "__main__":

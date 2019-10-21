@@ -61,7 +61,7 @@ class Publisher:
         self.BARO_RATE      = 50   #Hz
         self.Q_RATE_DIVISOR = 3    #1/3 gyro rate
         self.em7180 = EM7180_Master(self.MAG_RATE, self.ACCEL_RATE, self.GYRO_RATE, self.BARO_RATE, self.Q_RATE_DIVISOR)
-        if not self.em7180.begin():
+        if not self.em7180.begin(2):
             print('IMU initialization error!')
             print(self.em7180.getErrorString())
             exit(1)

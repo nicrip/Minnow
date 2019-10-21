@@ -2,7 +2,7 @@
 import time
 import math
 import numpy as np
-from controlconfig import * 
+from minnow_low_level_control.controlconfig import * 
 
 class speed_controller:
 
