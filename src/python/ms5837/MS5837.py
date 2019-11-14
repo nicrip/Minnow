@@ -58,31 +58,31 @@ UNITS_Centigrade = 1
 UNITS_Farenheit  = 2
 UNITS_Kelvin     = 3
 
-class MS5837(object):
-
-  # Registers
-  #####################################################
+# Registers
+#####################################################
   
-  # MS5837 default address.
-  MS5837_I2CADDR_0          = 0x76
-  MS5837_I2CADDR_1          = 0x77
+# MS5837 default address.
+MS5837_I2CADDR_0          = 0x76
+MS5837_I2CADDR_1          = 0x77
 
-  # Commands
-  MS5837_CMD_RESET          =  0x1E # reset
-  MS5837_CMD_ADC            =  0x00 # adc read
-  MS5837_CMD_PROM           =  0xA0 # PROM read a0-ae
-  MS5837_CMD_CONV_D1        =  0x4A # convert D1 8192
-  MS5837_CMD_CONV_D2        =  0x5A # convert D2 8192
-  MS5837_CMD_CONV_D1_256    =  0x40 # convert D1 256
-  MS5837_CMD_CONV_D2_256    =  0x50 # convert D2 256
+# Commands
+MS5837_CMD_RESET          =  0x1E # reset
+MS5837_CMD_ADC            =  0x00 # adc read
+MS5837_CMD_PROM           =  0xA0 # PROM read a0-ae
+MS5837_CMD_CONV_D1        =  0x4A # convert D1 8192
+MS5837_CMD_CONV_D2        =  0x5A # convert D2 8192
+MS5837_CMD_CONV_D1_256    =  0x40 # convert D1 256
+MS5837_CMD_CONV_D2_256    =  0x50 # convert D2 256
 
-  # State of Sensor
-  MS5837_STATE_IDLE = 0
-  MS5837_STATE_TEMPERATURE = 1
-  MS5837_STATE_PRESSURE = 2
+# State of Sensor
+MS5837_STATE_IDLE = 0
+MS5837_STATE_TEMPERATURE = 1
+MS5837_STATE_PRESSURE = 2
 
   #####################################################
 
+
+class MS5837(object):  
   def __init__(self, model=MODEL_30BA, i2c=None, **kwargs):
         
     self._logger = logging.getLogger('MS5837.MS5837')
@@ -104,7 +104,7 @@ class MS5837(object):
     self._device = i2c.get_i2c_device(MS5837_I2CADDR_0, **kwargs)
     
     # Reset
-    cmd = MS5837_RESET
+    cmd = MS5837_CMD_RESET
     self._device.writeRaw8(cmd)   # Reset device
     time.sleep(0.01)              # give some time to recover
         

@@ -52,7 +52,7 @@ class Publisher:
         #setup flatbuffers
         self.fb_builder = flatbuffers.Builder(1024)
         #setup depth sensor
-        self.ms5837 = MS5837.MS5837(model=MS5837.MODEL_30BA, bus=1)
+        self.ms5837 = MS5837.MS5837(model=MS5837.MODEL_30BA, i2c=None, busnum=2)
         self.depth = 0
         self.temperature = 0
         self.static_pressure = 0

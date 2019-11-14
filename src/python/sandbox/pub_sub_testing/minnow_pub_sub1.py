@@ -18,7 +18,7 @@ class Subscriber(Thread):
     def run(self):
         print('starting subscriber, on topic(s) {}'.format(self.topics_callbacks.keys()))
         subscriber = self.context.socket(zmq.SUB)
-        subscriber.connect("tcp://127.0.0.1:5555")
+        subscriber.connect("tcp://192.168.7.1:5555")
         for topic in self.topics_callbacks.keys():
             subscriber.setsockopt_string(zmq.SUBSCRIBE, topic)
         poller = zmq.Poller()
