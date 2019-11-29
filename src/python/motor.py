@@ -57,13 +57,19 @@ class Publisher:
         self.motor_2_command = 0.0
         self.motor_3_command = 0.0
         #setup motors
-        PWM.start("P9_21", 3, 2000) #motor 1 beaglebone PWM pin
-        PWM.start("P9_22", 3, 2000) #motor 2 beaglebone PWM pin
-        PWM.start("P9_16", 3, 2000) #motor 3 beaglebone PWM pin
-        self.pwm_min = 2.5
-        self.pwm_max = 3.5
+        self.pwm_freq = 8000.0                                                  #8000 Hz max for BlueRobotics ESC
+        self.pwm_stop = 1500                                                    #motor esc stops at 1500 microseconds
+        PWM.start("P9_21", self.pwm_stop/(1e6/self.pwm_freq), self.pwm_freq)    #motor 1 beaglebone PWM pin
+        PWM.start("P9_22", self.pwm_stop/(1e6/self.pwm_freq), self.pwm_freq)    #motor 2 beaglebone PWM pin
+        PWM.start("P9_16", self.pwm_stop/(1e6/self.pwm_freq), self.pwm_freq)    #motor 3 beaglebone PWM pin
+        #check BlueRobotics website for current draw - https://bluerobotics.com/store/thrusters/t100-t200-thrusters/t200-thruster/
+        #limit ourselves to ~6.5A
+        self.pwm_min = 1275                                                     #max reverse microseconds pwm value
+        self.pwm_max = 1725                                                     #max forward microseconds pwm value
+        self.pwm_deadband = 40                                                  #deadband around 1500 microseconds of 40 microseconds
         self.command_min = -80.0
         self.command_max = 80.0
+        self.command_deadband = 2.0
         time.sleep(10.0)
 
     def exit_signal(self, sig, frame):
@@ -85,9 +91,20 @@ class Publisher:
         self.motor_3_command = self.motor_command_msg.Motor3Command()
 
     def map_command_to_pwm(self, command):
-        command_scale = (command - self.command_min)/(self.command_max - self.command_min)
-        pwm_val = command_scale*(self.pwm_max - self.pwm_min) + self.pwm_min
-        return pwm_val
+        if abs(command) <= self.command_deadband:                               #stop vehicle if command is within command deadband
+            return self.pwm_stop/(1e6/self.pwm_freq)
+        else:
+            command_scale = (command - self.command_min)/(self.command_max - self.command_min)
+            min_val = self.pwm_min/(1e6/self.pwm_freq)
+            max_val = self.pwm_max/(1e6/self.pwm_freq)
+            pwm_val = command_scale*(max_val - min_val) + min_val
+            pwm_val_us = pwm_val*(1e6/self.pwm_freq)
+            if abs(pwm_val_us - self.pwm_stop) <= self.pwm_deadband:            #if pwm mapping is within pwm deadband, push outside pwm deadband
+                if abs(pwm_val_us - (self.pwm_stop - self.pwm_deadband)) < abs(pwm_val_us - (self.pwm_stop + self.pwm_deadband)):
+                    pwm_val = (self.pwm_stop-40)/(1e6/self.pwm_freq)
+                else:
+                    pwm_val = (self.pwm_stop+40)/(1e6/self.pwm_freq)
+            return pwm_val
 
     def run(self):
         socket = self.zmq_context.socket(zmq.PUB)
