@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
 import sys
@@ -66,11 +66,6 @@ class App:
         self.socket.send_string(msg)
 
     def process(self):
-        for subscriber in self.subscriptions:
-            subscriber.shutdown_flag.set()
-        time.sleep(1)
-        for subscriber in self.subscriptions:
-            subscriber.join()
         raise NotImplementedError('Inheriting apps must implement process() method!')
 
     def run(self):
