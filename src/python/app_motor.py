@@ -105,13 +105,14 @@ class Motor(App):
         print('Motor 1 value: {:6.3f}'.format(motor_1_pwm))
         print('Motor 2 value: {:6.3f}'.format(motor_2_pwm))
         print('Motor 3 value: {:6.3f}'.format(motor_3_pwm))
+        print('')
 
         value_msg = topics.motor.value.valueEnd(self.fb_builder)
         self.fb_builder.Finish(value_msg)
         bin_value_msg = self.fb_builder.Output()
         self.publish(b'motor.value' + b' ' + bin_value_msg)
 
-        time.sleep(0.001)
+        time.sleep(0.01)
 
 if __name__ == "__main__":
     app = Motor()

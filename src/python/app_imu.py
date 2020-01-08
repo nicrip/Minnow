@@ -34,21 +34,23 @@ class IMU(App):
 
     def process(self):
         if self.nav_gps_msg is not None:
-            self.mag_declination = self.nav_gps_msg.Mag_Declination()
+            self.magnetic_declination = self.nav_gps_msg.MagDeclination()
 
         self.usfs.fetchEventStatus()
         self.usfs.fetchSentralData()
 
-        topics.nav.imu.imuStart(self.fb_builder)
-        topics.nav.imu.imuAddTime(self.fb_builder, time.time())
         if self.usfs.algo_status == 8:
             status = 'locked'
         else:
             status = 'converging'
-        topics.nav.imu.imuAddStatus(self.fb_builder, status)
+        usfs_status = self.fb_builder.CreateString(status)
+
+        topics.nav.imu.imuStart(self.fb_builder)
+        topics.nav.imu.imuAddTime(self.fb_builder, time.time())
+        topics.nav.imu.imuAddStatus(self.fb_builder, usfs_status)
         topics.nav.imu.imuAddRoll(self.fb_builder, self.usfs.angle[0,0])
         topics.nav.imu.imuAddPitch(self.fb_builder, self.usfs.angle[1,0])
-        topics.nav.imu.imuAddYaw(self.fb_builder, self.usfs.heading + self.mag_declination)
+        topics.nav.imu.imuAddYaw(self.fb_builder, self.usfs.heading + self.magnetic_declination)
         topics.nav.imu.imuAddQuaternion0(self.fb_builder, self.usfs.qt[0,0])
         topics.nav.imu.imuAddQuaternionX(self.fb_builder, self.usfs.qt[1,0])
         topics.nav.imu.imuAddQuaternionY(self.fb_builder, self.usfs.qt[2,0])
@@ -66,16 +68,18 @@ class IMU(App):
         topics.nav.imu.imuAddTemperature(self.fb_builder, self.usfs.temperature)
 
         print('Status: {}'.format(status))
-        print('Roll: {:6.2f} deg'.format(self.usfs.angle[0,0]))
-        print('Pitch: {:6.2f} deg'.format(self.usfs.angle[1,0]))
-        print('Yaw: {:6.2f} deg'.format(self.usfs.heading + self.mag_declination))
+        print('Roll: {:6.5f} deg'.format(self.usfs.angle[0,0]))
+        print('Pitch: {:6.5f} deg'.format(self.usfs.angle[1,0]))
+        print('Yaw: {:6.5f} deg'.format(self.usfs.heading + self.magnetic_declination))
+        print('Magnetic Declination: {:6.5f} deg'.format(self.magnetic_declination))
+        print('')
 
         imu_msg = topics.nav.imu.imuEnd(self.fb_builder)
         self.fb_builder.Finish(imu_msg)
         bin_imu_msg = self.fb_builder.Output()
         self.publish(b'nav.imu' + b' ' + bin_imu_msg)
 
-        time.sleep(0.001)
+        time.sleep(0.01)
 
 if __name__ == "__main__":
     app = IMU()

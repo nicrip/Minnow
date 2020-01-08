@@ -57,17 +57,18 @@ class MotorControl(App):
         else:
             contrl_current_heading = current_heading - 360
         print('current hdg',current_heading)
-        print('cntrl desi hdg',self.contrl_desired_heading)
+        #print('cntrl desi hdg',self.contrl_desired_heading)
         self.heading_control_system.DesiredHeading(self.contrl_desired_heading)
 
         # Run speed controller
         (speed_contrl_thrust)=self.speed_control_system.update(self.desired_speed)
-        print("Speed Control Thrust Output: %f" % (speed_contrl_thrust))
+        #print("Speed Control Thrust Output: %f" % (speed_contrl_thrust))
         # Run heading controller
         (hdg_differential_thrust,hdg_port_thrust,hdg_stbd_thrust)=self.heading_control_system.update(contrl_current_heading,speed_contrl_thrust)
         #print(hdg_differential_thrust)
-        print("Heading control port thrust: %f" % hdg_port_thrust)
-        print("Heading control stbd thrust: %f" % hdg_stbd_thrust)
+        #print("Heading control port thrust: %f" % hdg_port_thrust)
+        #print("Heading control stbd thrust: %f" % hdg_stbd_thrust)
+        print('')
 
         topics.motor.command.commandStart(self.fb_builder)
         topics.motor.command.commandAddTime(self.fb_builder, time.time())
@@ -78,7 +79,7 @@ class MotorControl(App):
         bin_motor_msg = self.fb_builder.Output()
         self.publish(b'motor.command' + b' ' + bin_motor_msg)
 
-        time.sleep(0.001)
+        time.sleep(0.01)
 
 if __name__ == "__main__":
     app = MotorControl()

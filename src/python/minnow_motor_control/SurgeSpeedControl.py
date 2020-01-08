@@ -2,7 +2,7 @@
 import time
 import math
 import numpy as np
-from minnow_low_level_control.controlconfig import * 
+from .controlconfig import * 
 
 class speed_controller:
 
@@ -12,7 +12,7 @@ class speed_controller:
 	# speed_thrust_map = np.poly1d(np.polyfit(speed,thrust,2))
 
 	def __init__(self):
-		
+
 		self.max_thrust = config_max_motor_thrust
 		self.min_thrust = config_min_motor_thrust
 		self.speed_thrust_map = np.poly1d(np.polyfit(config_map_speed,config_map_thrust,2))
@@ -28,4 +28,3 @@ class speed_controller:
 			self.speed_thrust = self.min_thrust
 
 		return(self.speed_thrust)
-
