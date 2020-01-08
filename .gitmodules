@@ -1,3 +1,9 @@
 [submodule "src/python/minnow_drivers/pyUSFS"]
 	path = src/python/minnow_drivers/pyUSFS
 	url = https://github.com/nicrip/pyUSFS.git
+[submodule "src/python/minnow_drivers/pyMS5837"]
+	path = src/python/minnow_drivers/pyMS5837
+	url = https://github.com/nicrip/pyMS5837.git
+[submodule "src/python/minnow_drivers/pyZOEM8"]
+	path = src/python/minnow_drivers/pyZOEM8
+	url = https://github.com/nicrip/pyZOEM8.git
