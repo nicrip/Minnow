@@ -27,7 +27,7 @@ class Publisher(App):
 
     def process(self):
         self.count += 1
-        self.publish('POS_' + str(self.count))
+        self.publish_string('POS_' + str(self.count))
         if self.count%100 == 0:
             print(self.nav_msg, self.press_msg)
         time.sleep(0.001)

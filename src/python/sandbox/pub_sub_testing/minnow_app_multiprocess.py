@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
 import sys
@@ -29,7 +29,10 @@ class Subscriber(Process):
             evts = poller.poll(1000)
             if evts and not self.shutdown_flag:
                 message = subscriber.recv()
-                self.queue.put(message)
+                topic_name_msg = message.split(None,1)
+                topic_name = topic_name_msg[0]
+                topic_msg = topic_name_msg[1]
+                self.queue.put(topic_msg)
 
     def stop(self):
         self.shutdown_flag = True
@@ -63,6 +66,9 @@ class App:
                 subscriber.callback(msg)
 
     def publish(self, msg):
+        self.socket.send(msg)
+
+    def publish_string(self, msg):
         self.socket.send_string(msg)
 
     def process(self):

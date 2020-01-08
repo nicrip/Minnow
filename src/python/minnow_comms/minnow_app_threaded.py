@@ -28,9 +28,12 @@ class Subscriber(Thread):
         poller.register(subscriber, zmq.POLLIN)
         while not self.shutdown_flag.is_set():
             evts = poller.poll(1000)
-            if evts and not self.shutdown_flag.is_set():
+            if evts and not self.shutdown_flag:
                 message = subscriber.recv()
-                self.queue.put(message)
+                topic_name_msg = message.split(None,1)
+                topic_name = topic_name_msg[0]
+                topic_msg = topic_name_msg[1]
+                self.queue.put(topic_msg)
         print('subscriber stopped, on topic {}'.format(self.topic))
 
 class App:
@@ -60,6 +63,9 @@ class App:
                 subscriber.callback(msg)
 
     def publish(self, msg):
+        self.socket.send(msg)
+
+    def publish_string(self, msg):
         self.socket.send_string(msg)
 
     def process(self):

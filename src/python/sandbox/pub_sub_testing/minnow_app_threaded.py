@@ -60,6 +60,9 @@ class App:
                 subscriber.callback(msg)
 
     def publish(self, msg):
+        self.socket.send(msg)
+
+    def publish_string(self, msg):
         self.socket.send_string(msg)
 
     def process(self):
