@@ -26,117 +26,101 @@ class gps(object):
         return 0.0
 
     # gps
-    def Mode(self):
+    def Status(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Uint16Flags, o + self._tab.Pos)
-        return 0
+            return self._tab.String(o + self._tab.Pos)
+        return None
+
+    # gps
+    def Mode(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return None
+
+    # gps
+    def Quality(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return None
 
     # gps
     def Longitude(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
-        return 0.0
-
-    # gps
-    def Latitude(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
-        return 0.0
-
-    # gps
-    def Altitude(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
         return 0.0
 
     # gps
-    def Utc(self):
+    def Latitude(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return 0.0
+
+    # gps
+    def Altitude(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return 0.0
+
+    # gps
+    def Utc(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(18))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
         return 0.0
 
     # gps
-    def TimeToFirstFix(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
-        return 0
-
-    # gps
     def NumSatellites(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(18))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(20))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Int16Flags, o + self._tab.Pos)
         return 0
 
     # gps
     def Speed(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(20))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
-        return 0.0
-
-    # gps
-    def Heading(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(22))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
         return 0.0
 
     # gps
-    def Accuracy(self):
+    def Course(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(24))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
         return 0.0
 
     # gps
-    def Eastings(self):
+    def Hdop(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(26))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
         return 0.0
 
     # gps
-    def Northings(self):
+    def MagDeclination(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(28))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
         return 0.0
 
-    # gps
-    def UtmZone(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(30))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
-        return 0
-
-    # gps
-    def MagDeclination(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(32))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
-        return 0.0
-
-def gpsStart(builder): builder.StartObject(15)
+def gpsStart(builder): builder.StartObject(13)
 def gpsAddTime(builder, time): builder.PrependFloat64Slot(0, time, 0.0)
-def gpsAddMode(builder, mode): builder.PrependUint16Slot(1, mode, 0)
-def gpsAddLongitude(builder, longitude): builder.PrependFloat64Slot(2, longitude, 0.0)
-def gpsAddLatitude(builder, latitude): builder.PrependFloat64Slot(3, latitude, 0.0)
-def gpsAddAltitude(builder, altitude): builder.PrependFloat64Slot(4, altitude, 0.0)
-def gpsAddUtc(builder, utc): builder.PrependFloat32Slot(5, utc, 0.0)
-def gpsAddTimeToFirstFix(builder, timeToFirstFix): builder.PrependInt32Slot(6, timeToFirstFix, 0)
-def gpsAddNumSatellites(builder, numSatellites): builder.PrependInt16Slot(7, numSatellites, 0)
-def gpsAddSpeed(builder, speed): builder.PrependFloat64Slot(8, speed, 0.0)
-def gpsAddHeading(builder, heading): builder.PrependFloat64Slot(9, heading, 0.0)
-def gpsAddAccuracy(builder, accuracy): builder.PrependFloat64Slot(10, accuracy, 0.0)
-def gpsAddEastings(builder, eastings): builder.PrependFloat64Slot(11, eastings, 0.0)
-def gpsAddNorthings(builder, northings): builder.PrependFloat64Slot(12, northings, 0.0)
-def gpsAddUtmZone(builder, utmZone): builder.PrependInt32Slot(13, utmZone, 0)
-def gpsAddMagDeclination(builder, magDeclination): builder.PrependFloat64Slot(14, magDeclination, 0.0)
+def gpsAddStatus(builder, status): builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(status), 0)
+def gpsAddMode(builder, mode): builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(mode), 0)
+def gpsAddQuality(builder, quality): builder.PrependUOffsetTRelativeSlot(3, flatbuffers.number_types.UOffsetTFlags.py_type(quality), 0)
+def gpsAddLongitude(builder, longitude): builder.PrependFloat64Slot(4, longitude, 0.0)
+def gpsAddLatitude(builder, latitude): builder.PrependFloat64Slot(5, latitude, 0.0)
+def gpsAddAltitude(builder, altitude): builder.PrependFloat64Slot(6, altitude, 0.0)
+def gpsAddUtc(builder, utc): builder.PrependFloat32Slot(7, utc, 0.0)
+def gpsAddNumSatellites(builder, numSatellites): builder.PrependInt16Slot(8, numSatellites, 0)
+def gpsAddSpeed(builder, speed): builder.PrependFloat64Slot(9, speed, 0.0)
+def gpsAddCourse(builder, course): builder.PrependFloat64Slot(10, course, 0.0)
+def gpsAddHdop(builder, hdop): builder.PrependFloat64Slot(11, hdop, 0.0)
+def gpsAddMagDeclination(builder, magDeclination): builder.PrependFloat64Slot(12, magDeclination, 0.0)
 def gpsEnd(builder): return builder.EndObject()

@@ -15,9 +15,9 @@ def main():
     backend = context.socket(zmq.XSUB)
     backend.bind("tcp://*:5556")
 
-    zmq.proxy(frontend, backend)
-
     print('Minnow broker started.')
+
+    zmq.proxy(frontend, backend)
 
     # We never get here…
     frontend.close()

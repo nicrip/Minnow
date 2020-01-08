@@ -26,7 +26,7 @@ class depth(object):
         return 0.0
 
     # depth
-    def Temp(self):
+    def Temperature(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
@@ -55,7 +55,7 @@ class depth(object):
 
 def depthStart(builder): builder.StartObject(5)
 def depthAddTime(builder, time): builder.PrependFloat64Slot(0, time, 0.0)
-def depthAddTemp(builder, temp): builder.PrependFloat64Slot(1, temp, 0.0)
+def depthAddTemperature(builder, temperature): builder.PrependFloat64Slot(1, temperature, 0.0)
 def depthAddPressure(builder, pressure): builder.PrependFloat64Slot(2, pressure, 0.0)
 def depthAddDepthFresh(builder, depthFresh): builder.PrependFloat64Slot(3, depthFresh, 0.0)
 def depthAddDepthSalt(builder, depthSalt): builder.PrependFloat64Slot(4, depthSalt, 0.0)

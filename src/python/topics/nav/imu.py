@@ -26,93 +26,157 @@ class imu(object):
         return 0.0
 
     # imu
-    def Roll(self):
+    def Status(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
-        return 0.0
+            return self._tab.String(o + self._tab.Pos)
+        return None
 
     # imu
-    def Pitch(self):
+    def Roll(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
         return 0.0
 
     # imu
-    def Yaw(self):
+    def Pitch(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
         return 0.0
 
     # imu
-    def AccelX(self):
+    def Yaw(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
         return 0.0
 
     # imu
-    def AccelY(self):
+    def Quaternion0(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
         return 0.0
 
     # imu
-    def AccelZ(self):
+    def QuaternionX(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
         return 0.0
 
     # imu
-    def GyroX(self):
+    def QuaternionY(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(18))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
         return 0.0
 
     # imu
-    def GyroY(self):
+    def QuaternionZ(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(20))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
         return 0.0
 
     # imu
-    def GyroZ(self):
+    def AccelX(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(22))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
         return 0.0
 
     # imu
-    def Pressure(self):
+    def AccelY(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(24))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
         return 0.0
 
     # imu
-    def Temp(self):
+    def AccelZ(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(26))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
         return 0.0
 
-def imuStart(builder): builder.StartObject(12)
+    # imu
+    def GyroX(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(28))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return 0.0
+
+    # imu
+    def GyroY(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(30))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return 0.0
+
+    # imu
+    def GyroZ(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(32))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return 0.0
+
+    # imu
+    def MagX(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(34))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return 0.0
+
+    # imu
+    def MagY(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(36))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return 0.0
+
+    # imu
+    def MagZ(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(38))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return 0.0
+
+    # imu
+    def Pressure(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(40))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return 0.0
+
+    # imu
+    def Temperature(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(42))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return 0.0
+
+def imuStart(builder): builder.StartObject(20)
 def imuAddTime(builder, time): builder.PrependFloat64Slot(0, time, 0.0)
-def imuAddRoll(builder, roll): builder.PrependFloat64Slot(1, roll, 0.0)
-def imuAddPitch(builder, pitch): builder.PrependFloat64Slot(2, pitch, 0.0)
-def imuAddYaw(builder, yaw): builder.PrependFloat64Slot(3, yaw, 0.0)
-def imuAddAccelX(builder, accelX): builder.PrependFloat64Slot(4, accelX, 0.0)
-def imuAddAccelY(builder, accelY): builder.PrependFloat64Slot(5, accelY, 0.0)
-def imuAddAccelZ(builder, accelZ): builder.PrependFloat64Slot(6, accelZ, 0.0)
-def imuAddGyroX(builder, gyroX): builder.PrependFloat64Slot(7, gyroX, 0.0)
-def imuAddGyroY(builder, gyroY): builder.PrependFloat64Slot(8, gyroY, 0.0)
-def imuAddGyroZ(builder, gyroZ): builder.PrependFloat64Slot(9, gyroZ, 0.0)
-def imuAddPressure(builder, pressure): builder.PrependFloat64Slot(10, pressure, 0.0)
-def imuAddTemp(builder, temp): builder.PrependFloat64Slot(11, temp, 0.0)
+def imuAddStatus(builder, status): builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(status), 0)
+def imuAddRoll(builder, roll): builder.PrependFloat64Slot(2, roll, 0.0)
+def imuAddPitch(builder, pitch): builder.PrependFloat64Slot(3, pitch, 0.0)
+def imuAddYaw(builder, yaw): builder.PrependFloat64Slot(4, yaw, 0.0)
+def imuAddQuaternion0(builder, quaternion0): builder.PrependFloat64Slot(5, quaternion0, 0.0)
+def imuAddQuaternionX(builder, quaternionX): builder.PrependFloat64Slot(6, quaternionX, 0.0)
+def imuAddQuaternionY(builder, quaternionY): builder.PrependFloat64Slot(7, quaternionY, 0.0)
+def imuAddQuaternionZ(builder, quaternionZ): builder.PrependFloat64Slot(8, quaternionZ, 0.0)
+def imuAddAccelX(builder, accelX): builder.PrependFloat64Slot(9, accelX, 0.0)
+def imuAddAccelY(builder, accelY): builder.PrependFloat64Slot(10, accelY, 0.0)
+def imuAddAccelZ(builder, accelZ): builder.PrependFloat64Slot(11, accelZ, 0.0)
+def imuAddGyroX(builder, gyroX): builder.PrependFloat64Slot(12, gyroX, 0.0)
+def imuAddGyroY(builder, gyroY): builder.PrependFloat64Slot(13, gyroY, 0.0)
+def imuAddGyroZ(builder, gyroZ): builder.PrependFloat64Slot(14, gyroZ, 0.0)
+def imuAddMagX(builder, magX): builder.PrependFloat64Slot(15, magX, 0.0)
+def imuAddMagY(builder, magY): builder.PrependFloat64Slot(16, magY, 0.0)
+def imuAddMagZ(builder, magZ): builder.PrependFloat64Slot(17, magZ, 0.0)
+def imuAddPressure(builder, pressure): builder.PrependFloat64Slot(18, pressure, 0.0)
+def imuAddTemperature(builder, temperature): builder.PrependFloat64Slot(19, temperature, 0.0)
 def imuEnd(builder): return builder.EndObject()
