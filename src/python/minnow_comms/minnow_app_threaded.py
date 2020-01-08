@@ -28,7 +28,7 @@ class Subscriber(Thread):
         poller.register(subscriber, zmq.POLLIN)
         while not self.shutdown_flag.is_set():
             evts = poller.poll(1000)
-            if evts and not self.shutdown_flag:
+            if evts and not self.shutdown_flag.is_set():
                 message = subscriber.recv()
                 topic_name_msg = message.split(None,1)
                 topic_name = topic_name_msg[0]
