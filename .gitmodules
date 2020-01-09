@@ -7,3 +7,6 @@
 [submodule "src/python/minnow_drivers/pyZOEM8"]
 	path = src/python/minnow_drivers/pyZOEM8
 	url = https://github.com/nicrip/pyZOEM8.git
+[submodule "src/cpp/cppzmq"]
+	path = src/cpp/cppzmq
+	url = https://github.com/zeromq/cppzmq

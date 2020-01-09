@@ -29,10 +29,7 @@ class Subscriber(Process):
             evts = poller.poll(1000)
             if evts and not self.shutdown_flag:
                 message = subscriber.recv()
-                topic_name_msg = message.split(None,1)
-                topic_name = topic_name_msg[0]
-                topic_msg = topic_name_msg[1]
-                self.queue.put(topic_msg)
+                self.queue.put(message)
 
     def stop(self):
         self.shutdown_flag = True

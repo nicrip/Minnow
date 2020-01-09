@@ -1,45 +1,55 @@
 #include <iostream>
+#include <thread>
+#include <atomic>
 #include <zmq.hpp>
 
 #ifndef MINNOW_APP_THREADED_HDR
 #define MINNOW_APP_THREADED_HDR
 
+class Subscriber
+{
+  public:
+    Subscriber();
+    ~Subscriber();
+    void Start();
+    void Stop();
+
+  protected:
+    void Run();
+    template <typename T>
+    void Print(T a) {
+      std::cout << a << std::endl;
+    }
+
+    std::atomic<bool> shutdown_flag;
+    // std::string subscribed_topic;
+};
+
 class App
 {
- public:
-   App();
-   ~App();
+  public:
+    App();
+    ~App();
+    void Run();
 
- protected:
-   void ExitSignal(int s);
-   bool Iterate();
-   bool OnConnectToServer();
-   bool OnStartUp();
-   void RegisterVariables();
+  protected:
+    void ExitSignal(int s);
+    void Process();
+    void Publish(zmq::message_t msg, size_t msg_size);
+    void PublishString(const std::string& msg, size_t msg_size);
+    void Subscribe(std::string topic, void (*f)(zmq::message_t));
+    void CheckSubscriptions();
+    template <typename T>
+    void Print(T a) {
+      std::cout << a << std::endl;
+    }
 
- private: // Configuration variables
-   double       m_valid_std_azimuth;
-   double       m_valid_std_range;
-   double       m_loiter_x;
-   double       m_loiter_y;
-   // Beacon location estimate published by pLamssMissionManager
-   double       m_aco_beacon_x;
-   double       m_aco_beacon_y;
-   std::string  m_return_update_var;
-   std::string  m_abort_update_var;
+    zmq::context_t zmq_context;
+    zmq::socket_t socket;
+    std::vector<Subscriber*> subscriptions;
 
- private: // State variables
-   double       m_target_x;
-   double       m_target_y;
-   double       m_std_azimuth;
-   double       m_std_range;
-   std::string  m_deploy_mission;
-   std::string  m_mission_state;
-   double       m_nav_x;
-   double       m_nav_y;
-   double       m_nav_speed;
-   unsigned int m_iterations;
-   double       m_timewarp;
+  private:
+    int count;
 };
 
 #endif
