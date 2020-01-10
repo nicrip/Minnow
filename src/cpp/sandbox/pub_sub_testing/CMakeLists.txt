@@ -15,18 +15,25 @@ ADD_EXECUTABLE(minnow_broker ${SRC})
 TARGET_LINK_LIBRARIES(minnow_broker -lzmq)
 install(TARGETS minnow_broker DESTINATION ${project_BIN_DIR}/)
 
-# minnow_threaded_app
+# minnow threaded app
 SET(SRC
   minnow_app_threaded.cpp
 )
-ADD_EXECUTABLE(minnow_threaded_app ${SRC})
-TARGET_LINK_LIBRARIES(minnow_threaded_app -lzmq -lpthread)
-install(TARGETS minnow_broker DESTINATION ${project_BIN_DIR}/)
+ADD_LIBRARY(minnow_app SHARED ${SRC})
+TARGET_LINK_LIBRARIES(minnow_app -lzmq -lpthread)
 
-# minnow_test
+# Minnow example app 1
 SET(SRC
-  minnow_app_threaded_test.cpp
+  pub_nav_sub_pos.cpp
 )
-ADD_EXECUTABLE(minnow_test ${SRC})
-TARGET_LINK_LIBRARIES(minnow_test -lzmq -lpthread)
-install(TARGETS minnow_broker DESTINATION ${project_BIN_DIR}/)
+ADD_EXECUTABLE(pub_nav_sub_pos ${SRC})
+TARGET_LINK_LIBRARIES(pub_nav_sub_pos minnow_app -lzmq -lpthread )
+install(TARGETS pub_nav_sub_pos DESTINATION ${project_BIN_DIR}/)
+
+# Minnow example app 2
+SET(SRC
+  pub_pos_sub_nav.cpp
+)
+ADD_EXECUTABLE(pub_pos_sub_nav ${SRC})
+TARGET_LINK_LIBRARIES(pub_pos_sub_nav minnow_app -lzmq -lpthread )
+install(TARGETS pub_pos_sub_nav DESTINATION ${project_BIN_DIR}/)

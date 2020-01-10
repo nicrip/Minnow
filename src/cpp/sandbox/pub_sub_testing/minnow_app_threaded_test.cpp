@@ -31,12 +31,14 @@ void Subscriber::Run() {
 
   zmq::context_t zmq_context(1);
   zmq::socket_t subscriber(zmq_context, ZMQ_SUB);
-  zmq_connect(subscriber, "tcp://127.0.0.1:5555");
-  zmq_setsockopt(subscriber, ZMQ_SUBSCRIBE, "PRESS_", 1);
-  std::vector<zmq::pollitem_t> p = {{subscriber, 0, ZMQ_POLLIN, 0}};
+  zmq_connect((void*)subscriber, "tcp://127.0.0.1:5555");
+  zmq_setsockopt((void*)subscriber, ZMQ_SUBSCRIBE, "PRESS_", 1);
+  //std::vector<zmq::pollitem_t> p = {{subscriber, 0, ZMQ_POLLIN, 0}};
+  zmq::pollitem_t p[] = {{(void*)subscriber, 0, ZMQ_POLLIN, 0}};
   while(!shutdown_flag) {
     zmq::message_t rx_msg;
-    zmq::poll(p.data(), 1, 1000);
+    //zmq::poll(p.data(), 1, 1000);
+    zmq::poll(&p[0], 1, 1000);
     if (p[0].revents & ZMQ_POLLIN) {
       // received something on the first (only) socket
       subscriber.recv(&rx_msg);
@@ -73,11 +75,11 @@ void App::Process() {
 }
 
 void App::Publish(zmq::message_t msg, size_t msg_size) {
-  int rc = zmq_send(socket, &msg, msg_size, 0);
+  int rc = zmq_send((void*)socket, &msg, msg_size, 0);
 }
 
 void App::PublishString(const std::string& msg, size_t msg_size) {
-  int rc = zmq_send(socket, msg.data(), msg_size, 0);
+  int rc = zmq_send((void*)socket, msg.data(), msg_size, 0);
 }
 
 void App::Subscribe(std::string topic, void (*f)(zmq::message_t)) {
@@ -90,7 +92,7 @@ void App::CheckSubscriptions() {
 
 void App::Run() {
   Print("Starting publisher");
-  zmq_connect(socket, "tcp://127.0.0.1:5556");
+  zmq_connect((void*)socket, "tcp://127.0.0.1:5556");
   while(true) {
     CheckSubscriptions();
     Process();

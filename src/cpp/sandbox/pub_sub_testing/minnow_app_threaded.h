@@ -1,6 +1,7 @@
 #include <iostream>
 #include <thread>
 #include <atomic>
+#include <functional>
 #include <zmq.hpp>
 
 #ifndef MINNOW_APP_THREADED_HDR
@@ -8,48 +9,66 @@
 
 class Subscriber
 {
-  public:
-    Subscriber();
-    ~Subscriber();
-    void Start();
-    void Stop();
+public:
+  Subscriber(zmq::context_t* context, std::string topic);
+  ~Subscriber();
+  void Start();
+  void Stop();
 
-  protected:
-    void Run();
-    template <typename T>
-    void Print(T a) {
-      std::cout << a << std::endl;
-    }
+  std::string subscribed_topic;
+  std::atomic<bool> new_msg;
+  zmq::message_t msg;
 
-    std::atomic<bool> shutdown_flag;
-    // std::string subscribed_topic;
+private:
+  void Run();
+  template <typename T>
+  void Print(T a) {
+    std::cout << a << std::endl;
+  }
+
+  zmq::context_t* zmq_context;
+  std::atomic<bool> receive_active;
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::function<void(int)> cpphandler = NULL;
+extern "C" {
+    void signal_handler(int i);
+}
+void signal_handler(int i){
+    cpphandler(i);
+    return;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 class App
 {
-  public:
-    App();
-    ~App();
-    void Run();
+public:
+  App();
+  ~App();
+  void Run();
 
-  protected:
-    void ExitSignal(int s);
-    void Process();
-    void Publish(zmq::message_t msg, size_t msg_size);
-    void PublishString(const std::string& msg, size_t msg_size);
-    void Subscribe(std::string topic, void (*f)(zmq::message_t));
-    void CheckSubscriptions();
-    template <typename T>
-    void Print(T a) {
-      std::cout << a << std::endl;
-    }
+protected:
+  void ExitSignal(int s);
+  void Subscribe(std::string topic);
+  void CheckSubscriptions();
+  void PublishString(const std::string& msg, size_t msg_size);
+  virtual void Init() = 0;    // must be implemented by subclasses
+  virtual void Process() = 0; // must be implemented by subclasses
 
-    zmq::context_t zmq_context;
-    zmq::socket_t socket;
-    std::vector<Subscriber*> subscriptions;
+  zmq::context_t* zmq_context;
+  zmq::socket_t* zmq_socket;
+  std::vector<Subscriber*> subscriptions;
+  unsigned int sleep_ms;
 
-  private:
-    int count;
+private:
+  template <typename T>
+  void Print(T a) {
+    std::cout << a << std::endl;
+  }
+
 };
 
 #endif
