@@ -17,16 +17,23 @@ int main(int argc, char* argv[]) {
 		std::cout << "Configuration file \"" << config_file << "\" not found... Exiting." << std::endl;
 		exit(0);
 	}
-  std::string protocol = config["protocol"].as<std::string>();
-  std::string host = config["host"].as<std::string>();
+  std::string protocol;
+  std::string host;
   unsigned int port;
-  if(protocol == "ipc") {
-    std::cout << "Using inter-process communications (ipc)." << std::endl;
-  } else if(protocol == "tcp") {
-    std::cout << "Using transmission control protocol (tcp)." << std::endl;
-    port = config["port"].as<int>();
-  } else {
-    std::cout << "Unknown communications protocol... Exiting." << std::endl;
+  try {
+    protocol = config["protocol"].as<std::string>();
+    host = config["host"].as<std::string>();
+    if(protocol == "ipc") {
+      std::cout << "Using inter-process communications (ipc)." << std::endl;
+    } else if(protocol == "tcp") {
+      std::cout << "Using transmission control protocol (tcp)." << std::endl;
+      port = config["port"].as<int>();
+    } else {
+      std::cout << "Unknown communications protocol... Exiting." << std::endl;
+      exit(0);
+    }
+  } catch (...) {
+    std::cout << "Configuration file must define \"protocol\", \"host\" and, if required, \"port\"... Exiting." << std::endl;
     exit(0);
   }
 

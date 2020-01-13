@@ -1,0 +1,11 @@
+protocol: ipc
+host: minnow
+
+test_app1:
+  tick: 1
+
+test_app2:
+  tick: 1
+
+test_app_topic1:
+  tick: 1

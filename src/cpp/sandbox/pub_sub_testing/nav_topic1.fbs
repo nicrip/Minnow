@@ -1,0 +1,8 @@
+namespace topics.nav;
+
+table topic1 {
+  time:double;            // time since epoch in seconds
+  test:string;            // test string
+}
+
+root_type topic1;
