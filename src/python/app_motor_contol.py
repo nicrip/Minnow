@@ -14,6 +14,7 @@ import topics.motor.command
 # motor control library
 from minnow_motor_control.HeadingControl import *
 from minnow_motor_control.SurgeSpeedControl import *
+from minnow_motor_control.PitchControl import *
 
 class MotorControl(App):
     def __init__(self):
@@ -24,23 +25,23 @@ class MotorControl(App):
         # setup motor controllers
         self.speed_control_system = speed_controller()
         self.heading_control_system = heading_controller()
+        self.pitch_control_system = pitch_controller()
         # variables
         self.nav_imu_msg = None
 
         # This is for standalone troubleshooting of the python code ---------------------
-        self.desired_speed = 0.0
-        self.desired_heading = 270     # between 0 - 360
-        self.desired_pitch = 0.0
+        self.desired_speed = 1.0
+        self.desired_heading = 120     # between 0 - 360
+        self.desired_pitch = 30.0       # Pitch down is positive
 
         self.current_speed = 0.0
-        # self.current_heading = 170
-        self.current_pitch = -2.0
-        self.contrl_desired_heading = 0
-        if (self.desired_heading >= 0) and (self.desired_heading <= 180):
-            self.contrl_desired_heading = self.desired_heading
-        else:
-            self.contrl_desired_heading = self.desired_heading - 360
+        self.current_heading = 120
+        self.current_pitch = 0.0
         # -------------------------------------------------------------------------------
+
+        # Setting desired heading, speed, pitch and depth
+        self.heading_control_system.DesiredHeading(self.desired_heading) # this should be called only when desired heading is altered
+        self.pitch_control_system.DesiredPitch(self.desired_pitch) # this should be called only when desired heading is altered
 
     def setup_subscribers(self):
         self.subscribe('nav.imu', self.nav_imu_callback)    # subscribe to imu messages
@@ -49,33 +50,34 @@ class MotorControl(App):
         self.nav_imu_msg = topics.nav.imu.imu.GetRootAsimu(msg, 0)
 
     def process(self):
-        current_heading = 0.0
         if self.nav_imu_msg is not None:
-            current_heading = self.nav_imu_msg.Yaw()
-            print('current hdg',current_heading)
-
-        if (current_heading >= 0) and (current_heading <= 180):
-            contrl_current_heading = current_heading
-        else:
-            contrl_current_heading = current_heading - 360
-
-        #print('cntrl desi hdg',self.contrl_desired_heading)
-        self.heading_control_system.DesiredHeading(self.contrl_desired_heading)
+            self.current_heading = self.nav_imu_msg.Yaw()
+            self.current_pitch = self.nav_imu_msg.Pitch()
+            print('current hdg',self.current_heading)
+            print('current pitch',self.current_pitch)
 
         # Run speed controller
         (speed_contrl_thrust)=self.speed_control_system.update(self.desired_speed)
-        #print("Speed Control Thrust Output: %f" % (speed_contrl_thrust))
+        print("Lower thrust after speed controller: %f" % speed_contrl_thrust)
+
+        # Run pitch controller
+        (pitch_mixed_speed_thrust,upper_thrust)=self.pitch_control_system.update(self.current_pitch,speed_contrl_thrust)
+        print("Lower thrust after pitch controller: %f" % pitch_mixed_speed_thrust)
+
         # Run heading controller
-        (hdg_differential_thrust,hdg_port_thrust,hdg_stbd_thrust)=self.heading_control_system.update(contrl_current_heading,speed_contrl_thrust)
+        (hdg_port_thrust,hdg_stbd_thrust)=self.heading_control_system.update(self.current_heading,pitch_mixed_speed_thrust)
+        
         #print(hdg_differential_thrust)
-        #print("Heading control port thrust: %f" % hdg_port_thrust)
-        #print("Heading control stbd thrust: %f" % hdg_stbd_thrust)
+        print("Heading control port thrust: %f" % hdg_port_thrust)
+        print("Heading control stbd thrust: %f" % hdg_stbd_thrust)
+        print("Pitch control Upper thrust: %f" % upper_thrust)
         print('')
 
         topics.motor.command.commandStart(self.fb_builder)
         topics.motor.command.commandAddTime(self.fb_builder, time.time())
         topics.motor.command.commandAddMotor1Command(self.fb_builder, hdg_port_thrust)
         topics.motor.command.commandAddMotor2Command(self.fb_builder, hdg_stbd_thrust)
+        topics.motor.command.commandAddMotor3Command(self.fb_builder, upper_thrust)
         motor_msg = topics.motor.command.commandEnd(self.fb_builder)
         self.fb_builder.Finish(motor_msg)
         bin_motor_msg = self.fb_builder.Output()
