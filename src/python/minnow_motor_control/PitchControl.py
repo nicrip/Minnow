@@ -37,22 +37,28 @@ class pitch_controller:
         pitch_differential_thrust = pitch_p_value + pitch_i_value + pitch_d_value
         print('Pitch differential thrust ',pitch_differential_thrust)
 
-        # mixing speed thrust and diff thrust
-        vert_thrust = speed_thrust + pitch_differential_thrust
-        if (speed_thrust + pitch_differential_thrust) > config_max_motor_thrust:
-            vert_thrust_correction = (speed_thrust + pitch_differential_thrust) - config_max_motor_thrust
-            vert_thrust = vert_thrust - vert_thrust_correction
+        # mixing speed thrust and pitch diff thrust
+        upper_thrust = speed_thrust + 0.5 *pitch_differential_thrust
+        lower_thrust = speed_thrust - 0.5 *pitch_differential_thrust
+        if (speed_thrust + 0.5 * abs(pitch_differential_thrust)) > config_max_motor_thrust:
+            pitch_differential_thrust_correction = (speed_thrust + 0.5 * abs(pitch_differential_thrust)) - config_max_motor_thrust
+            upper_thrust = upper_thrust - vert_thrust_correction
+            lower_thrust = lower_thrust - vert_thrust_correction
 
         # motor safelty limits
-        if vert_thrust > config_max_motor_thrust:
-            vert_thrust = vert_thrust
-        if vert_thrust < vert_thrust:
-            vert_thrust = vert_thrust
+        if upper_thrust > config_max_motor_thrust:
+            upper_thrust = config_max_motor_thrust
+        if lower_thrust > config_max_motor_thrust:
+            lower_thrust = config_max_motor_thrust
+        if upper_thrust < config_min_motor_thrust:
+            upper_thrust = config_min_motor_thrust
+        if lower_thrust < config_min_motor_thrust:
+            lower_thrust = config_min_motor_thrust
 
         # For error deravative
         self.prev_pitch_error = self.pitch_error
 
-        return(vert_thrust)
+        return(lower_thrust,upper_thrust)
 
     def DesiredPitch(self,desired_pitch):
         self.desired_pitch = desired_pitch

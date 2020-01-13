@@ -36,7 +36,7 @@ class MotorControl(App):
 
         self.current_speed = 0.0
         self.current_heading = 120
-        self.current_pitch = -2.0
+        self.current_pitch = 0.0
         # -------------------------------------------------------------------------------
 
         # Setting desired heading, speed, pitch and depth
@@ -58,21 +58,26 @@ class MotorControl(App):
 
         # Run speed controller
         (speed_contrl_thrust)=self.speed_control_system.update(self.desired_speed)
-        print("Speed control thrust: %f" % speed_contrl_thrust)
+        print("Lower thrust after speed controller: %f" % speed_contrl_thrust)
+
+        # Run pitch controller
+        (pitch_mixed_speed_thrust,upper_thrust)=self.pitch_control_system.update(self.current_pitch,speed_contrl_thrust)
+        print("Lower thrust after pitch controller: %f" % pitch_mixed_speed_thrust)
+
         # Run heading controller
-        (hdg_differential_thrust,hdg_port_thrust,hdg_stbd_thrust)=self.heading_control_system.update(self.current_heading,speed_contrl_thrust)
-        (vert_thrust)=self.pitch_control_system.update(self.current_pitch,speed_contrl_thrust)
+        (hdg_port_thrust,hdg_stbd_thrust)=self.heading_control_system.update(self.current_heading,pitch_mixed_speed_thrust)
+        
         #print(hdg_differential_thrust)
         print("Heading control port thrust: %f" % hdg_port_thrust)
         print("Heading control stbd thrust: %f" % hdg_stbd_thrust)
-        print("Pitch control vert thrust: %f" % vert_thrust)
+        print("Pitch control Upper thrust: %f" % upper_thrust)
         print('')
 
         topics.motor.command.commandStart(self.fb_builder)
         topics.motor.command.commandAddTime(self.fb_builder, time.time())
         topics.motor.command.commandAddMotor1Command(self.fb_builder, hdg_port_thrust)
         topics.motor.command.commandAddMotor2Command(self.fb_builder, hdg_stbd_thrust)
-        topics.motor.command.commandAddMotor3Command(self.fb_builder, vert_thrust)
+        topics.motor.command.commandAddMotor3Command(self.fb_builder, upper_thrust)
         motor_msg = topics.motor.command.commandEnd(self.fb_builder)
         self.fb_builder.Finish(motor_msg)
         bin_motor_msg = self.fb_builder.Output()

@@ -67,7 +67,7 @@ class heading_controller:
         # For error deravative
         self.prev_hdg_error = self.hdg_error
 
-        return(hdg_differential_thrust,hdg_port_thrust,hdg_stbd_thrust)
+        return(hdg_port_thrust,hdg_stbd_thrust)
 
     def DesiredHeading(self,desired_heading):
         self.desired_heading = desired_heading
