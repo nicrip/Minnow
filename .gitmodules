@@ -10,3 +10,6 @@
 [submodule "src/cpp/cppzmq"]
 	path = src/cpp/cppzmq
 	url = https://github.com/zeromq/cppzmq
+[submodule "src/cpp/yaml-cpp"]
+	path = src/cpp/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp

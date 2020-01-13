@@ -33,7 +33,8 @@ void Subscriber::Run() {
   ss.str("");
 
   zmq::socket_t subscriber(*zmq_context, ZMQ_SUB);
-  zmq_connect(subscriber, "tcp://127.0.0.1:5555");
+  // zmq_connect(subscriber, "tcp://127.0.0.1:5555");  // tcp
+  zmq_connect(subscriber, "ipc://minnow.pub");  // ipc
   zmq_setsockopt(subscriber, ZMQ_SUBSCRIBE, subscribed_topic.c_str(), 1);
   std::vector<zmq::pollitem_t> p = {{subscriber, 0, ZMQ_POLLIN, 0}};
   while(receive_active) {
@@ -53,7 +54,7 @@ void Subscriber::Run() {
 App::App() {
   zmq_context = new zmq::context_t(1);
   zmq_socket = new zmq::socket_t(*zmq_context, ZMQ_PUB);
-  sleep_ms = 1;
+  sleep_ms = 0;
 
   cpphandler = std::bind(&App::ExitSignal, this, std::placeholders::_1);
   struct sigaction sigIntHandler;
@@ -77,6 +78,7 @@ void App::ExitSignal(int s) {
     (*it)->Stop();
   }
   Print("Exiting Minnow App...");
+  zmq_ctx_destroy(zmq_context);
   exit(1);
 }
 
@@ -114,7 +116,8 @@ void App::Run() {
 
   Init();
 
-  zmq_connect(*zmq_socket, "tcp://127.0.0.1:5556");
+  // zmq_connect(*zmq_socket, "tcp://127.0.0.1:5556"); // tcp
+  zmq_connect(*zmq_socket, "ipc://minnow.sub");  // ipc
 
   while(true) {
     auto start = high_resolution_clock::now();
