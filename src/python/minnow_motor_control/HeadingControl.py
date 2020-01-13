@@ -14,6 +14,8 @@ class heading_controller:
         self.hdg_error_integral=hdg_error_integral
         self.desired_heading=0.0
         self.hdg_error=0.0
+        self.prev_hdg_stbd_thrust = 0.0
+        self.prev_hdg_port_thrust = 0.0
 
     def update(self,current_heading,speed_thrust):
         # Calculating heading error
@@ -64,8 +66,15 @@ class heading_controller:
         if hdg_stbd_thrust < config_min_motor_thrust:
             hdg_stbd_thrust = config_min_motor_thrust
 
+        if (abs(hdg_stbd_thrust-self.prev_hdg_stbd_thrust)>80):
+            hdg_stbd_thrust = 0.25*hdg_stbd_thrust
+        if (abs(hdg_port_thrust-self.prev_hdg_port_thrust)>80):
+            hdg_port_thrust = 0.25*hdg_port_thrust
+
         # For error deravative
         self.prev_hdg_error = self.hdg_error
+        self.prev_hdg_stbd_thrust = hdg_stbd_thrust
+        self.prev_hdg_port_thrust = hdg_port_thrust
 
         return(hdg_port_thrust,hdg_stbd_thrust)
 

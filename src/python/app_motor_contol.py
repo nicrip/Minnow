@@ -30,9 +30,9 @@ class MotorControl(App):
         self.nav_imu_msg = None
 
         # This is for standalone troubleshooting of the python code ---------------------
-        self.desired_speed = 1.0
-        self.desired_heading = 120     # between 0 - 360
-        self.desired_pitch = 30.0       # Pitch down is positive
+        self.desired_speed = 0.0
+        self.desired_heading = 280     # between 0 - 360
+        self.desired_pitch = 0.0       # Pitch down is positive
 
         self.current_speed = 0.0
         self.current_heading = 120
@@ -77,13 +77,13 @@ class MotorControl(App):
         topics.motor.command.commandAddTime(self.fb_builder, time.time())
         topics.motor.command.commandAddMotor1Command(self.fb_builder, hdg_port_thrust)
         topics.motor.command.commandAddMotor2Command(self.fb_builder, hdg_stbd_thrust)
-        topics.motor.command.commandAddMotor3Command(self.fb_builder, upper_thrust)
+        topics.motor.command.commandAddMotor3Command(self.fb_builder, -1*upper_thrust)
         motor_msg = topics.motor.command.commandEnd(self.fb_builder)
         self.fb_builder.Finish(motor_msg)
         bin_motor_msg = self.fb_builder.Output()
         self.publish(b'motor.command' + b' ' + bin_motor_msg)
 
-        time.sleep(0.01)
+        time.sleep(0.1)
 
 if __name__ == "__main__":
     app = MotorControl()

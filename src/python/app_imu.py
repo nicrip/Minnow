@@ -79,7 +79,7 @@ class IMU(App):
         bin_imu_msg = self.fb_builder.Output()
         self.publish(b'nav.imu' + b' ' + bin_imu_msg)
 
-        time.sleep(0.05)
+        time.sleep(0.1)
 
 if __name__ == "__main__":
     app = IMU()

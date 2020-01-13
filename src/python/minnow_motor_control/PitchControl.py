@@ -17,7 +17,7 @@ class pitch_controller:
 
     def update(self,current_pitch,speed_thrust):
         # Calculating heading error
-        # +ve errors turn towards stbd and -ve towards port
+        # +ve errors turns nose up
         self.pitch_error = self.desired_pitch - current_pitch
 
         print('Current Pitch',current_pitch)
@@ -38,12 +38,12 @@ class pitch_controller:
         print('Pitch differential thrust ',pitch_differential_thrust)
 
         # mixing speed thrust and pitch diff thrust
-        upper_thrust = speed_thrust + 0.5 *pitch_differential_thrust
-        lower_thrust = speed_thrust - 0.5 *pitch_differential_thrust
+        upper_thrust = speed_thrust - 0.5 *pitch_differential_thrust
+        lower_thrust = speed_thrust + 0.5 *pitch_differential_thrust
         if (speed_thrust + 0.5 * abs(pitch_differential_thrust)) > config_max_motor_thrust:
             pitch_differential_thrust_correction = (speed_thrust + 0.5 * abs(pitch_differential_thrust)) - config_max_motor_thrust
-            upper_thrust = upper_thrust - vert_thrust_correction
-            lower_thrust = lower_thrust - vert_thrust_correction
+            upper_thrust = upper_thrust - pitch_differential_thrust_correction
+            lower_thrust = lower_thrust - pitch_differential_thrust_correction
 
         # motor safelty limits
         if upper_thrust > config_max_motor_thrust:

@@ -112,7 +112,7 @@ class Motor(App):
         bin_value_msg = self.fb_builder.Output()
         self.publish(b'motor.value' + b' ' + bin_value_msg)
 
-        time.sleep(0.01)
+        time.sleep(0.1)
 
 if __name__ == "__main__":
     app = Motor()
