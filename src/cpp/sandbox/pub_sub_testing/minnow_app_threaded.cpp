@@ -35,7 +35,7 @@ void Subscriber::Run() {
 
   zmq::socket_t subscriber(*zmq_context, ZMQ_SUB);
   zmq_connect(subscriber, address.c_str());
-  zmq_setsockopt(subscriber, ZMQ_SUBSCRIBE, subscribed_topic.c_str(), 1);
+  zmq_setsockopt(subscriber, ZMQ_SUBSCRIBE, subscribed_topic.c_str(), subscribed_topic.size());
   std::vector<zmq::pollitem_t> p = {{subscriber, 0, ZMQ_POLLIN, 0}};
   while(receive_active) {
     zmq_poll(p.data(), 1, 1000);

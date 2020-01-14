@@ -36,7 +36,7 @@ void SampleApp1::Init() {
   count = 0;
   builder = new flatbuffers::FlatBufferBuilder();
 
-  Subscribe("nav.topics");
+  Subscribe("nav.topic1");
 }
 
 void SampleApp1::Process() {

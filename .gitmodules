@@ -13,3 +13,6 @@
 [submodule "src/cpp/yaml-cpp"]
 	path = src/cpp/yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp
+[submodule "src/cpp/flatbuffers"]
+	path = src/cpp/flatbuffers
+	url = https://github.com/google/flatbuffers.git
