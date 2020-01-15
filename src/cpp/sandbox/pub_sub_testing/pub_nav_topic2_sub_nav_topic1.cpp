@@ -7,11 +7,11 @@
 #include "topics/nav_topic1_generated.h"
 #include "topics/nav_topic2_generated.h"
 
-class SampleApp1 : public App
+class SampleApp2 : public App
 {
 public:
-  SampleApp1();
-  ~SampleApp1();
+  SampleApp2();
+  ~SampleApp2();
 
 protected:
   void Process();
@@ -19,7 +19,7 @@ protected:
   void CallBack(uint8_t* msg, size_t msg_size);
 
 private:
-  void SetMessageTopic1();
+  void SetMessageTopic2();
 
   flatbuffers::FlatBufferBuilder* builder;
   uint8_t* msg_buf;
@@ -27,23 +27,23 @@ private:
   unsigned int count;
 };
 
-SampleApp1::SampleApp1() {
+SampleApp2::SampleApp2() {
 
 }
 
-SampleApp1::~SampleApp1() {
+SampleApp2::~SampleApp2() {
 
 }
 
-void SampleApp1::CallBack(uint8_t* msg, size_t msg_size) {
-  std::cout << "Callback for nav.topic2" << std::endl;
-  auto topic2 = topics::nav::Gettopic2(msg);
-  auto time = topic2->time();
-  auto val = topic2->test()->c_str();
+void SampleApp2::CallBack(uint8_t* msg, size_t msg_size) {
+  std::cout << "Callback for nav.topic1" << std::endl;
+  auto topic1 = topics::nav::Gettopic1(msg);
+  auto time = topic1->time();
+  auto val = topic1->test()->c_str();
   std::cout << std::fixed << time << " " << val << std::endl;
 }
 
-void SampleApp1::SetMessageTopic1() {
+void SampleApp2::SetMessageTopic2() {
   builder->Clear();
   auto now     = std::chrono::system_clock::now();
   auto epoch   = now.time_since_epoch();
@@ -51,29 +51,29 @@ void SampleApp1::SetMessageTopic1() {
   double utc = milliseconds.count()/1000.0;
   std::stringstream ss;
   count = count + 1;
-  ss << "topic1 message: " << count;
+  ss << "topic2 message: " << count;
   std::string msg = ss.str();
   auto test_string = builder->CreateString(msg);
-  topics::nav::topic1Builder topic1_builder(*builder);
-  topic1_builder.add_time(utc);
-  topic1_builder.add_test(test_string);
-  auto topic1_msg = topic1_builder.Finish();
-  builder->Finish(topic1_msg);
+  topics::nav::topic2Builder topic2_builder(*builder);
+  topic2_builder.add_time(utc);
+  topic2_builder.add_test(test_string);
+  auto topic2_msg = topic2_builder.Finish();
+  builder->Finish(topic2_msg);
   msg_buf = builder->GetBufferPointer();
   msg_size = builder->GetSize();
 }
 
-void SampleApp1::Init() {
+void SampleApp2::Init() {
   unsigned int tick = GetConfigParameter<unsigned int>("tick");
   SetHz(tick);
   count = 0;
   builder = new flatbuffers::FlatBufferBuilder();
-  Subscribe("nav.topic2", [this](uint8_t* msg, size_t msg_size){CallBack(msg, msg_size);});
+  Subscribe("nav.topic1", [this](uint8_t* msg, size_t msg_size){CallBack(msg, msg_size);});
 }
 
-void SampleApp1::Process() {
-  SetMessageTopic1();
-  Publish("nav.topic1", msg_buf, msg_size);
+void SampleApp2::Process() {
+  SetMessageTopic2();
+  Publish("nav.topic2", msg_buf, msg_size);
 }
 
 int main(int argc, char *argv[])
@@ -83,8 +83,8 @@ int main(int argc, char *argv[])
     exit(0);
   }
   std::string config_file = argv[1];
-  SampleApp1 sample_app1;
-  sample_app1.SetName("test_app_topic1");
-  sample_app1.SetConfig(config_file);
-  sample_app1.Run();
+  SampleApp2 sample_app2;
+  sample_app2.SetName("test_app_topic2");
+  sample_app2.SetConfig(config_file);
+  sample_app2.Run();
 }

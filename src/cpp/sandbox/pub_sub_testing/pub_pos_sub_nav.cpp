@@ -12,6 +12,7 @@ public:
 protected:
   void Process();
   void Init();
+  void CallBack(uint8_t* msg, size_t msg_size);
 
 private:
   unsigned int count;
@@ -25,24 +26,29 @@ SampleApp1::~SampleApp1() {
 
 }
 
+void SampleApp1::CallBack(uint8_t* msg, size_t msg_size) {
+  std::string test(msg, msg+msg_size);
+  std::cout << "Callback received: " << test << std::endl;
+}
+
 void SampleApp1::Init() {
   unsigned int tick = GetConfigParameter<unsigned int>("tick");
   SetHz(tick);
   count = 0;
-  Subscribe("NAV_");
+  Subscribe("NAV", [this](uint8_t* msg, size_t msg_size){CallBack(msg, msg_size);});
 }
 
 void SampleApp1::Process() {
   std::stringstream ss;
   count = count + 1;
-  ss << "POS_" << count;
+  ss << "position message: " << count;
   std::string msg = ss.str();
-  PublishString(msg, msg.length());
+  PublishString("POS", msg, msg.length());
   ss.str("");
 
-  ss << "PRESS_" << count;
+  ss << "pressure message: " << count;
   msg = ss.str();
-  PublishString(msg, msg.length());
+  PublishString("PRESS", msg, msg.length());
 }
 
 int main(int argc, char *argv[])

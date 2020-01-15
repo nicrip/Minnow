@@ -6,10 +6,11 @@
 
 using namespace std::chrono;
 
-Subscriber::Subscriber(zmq::context_t* context, std::string address, std::string topic) : receive_active_(false), new_msg_(false) {
+Subscriber::Subscriber(zmq::context_t* context, std::string address, std::string topic, std::function<void(uint8_t* msg, size_t msg_size)> callback) : receive_active_(false), new_msg_(false) {
   zmq_context_ = context;
   address_ = address;
   topic_ = topic;
+  callback_ = callback;
 }
 
 Subscriber::~Subscriber() {
@@ -88,12 +89,12 @@ void App::ExitSignal(int s) {
   exit(1);
 }
 
-void App::Subscribe(std::string topic) {
+void App::Subscribe(std::string topic, std::function<void(uint8_t* msg, size_t msg_size)> callback) {
   std::stringstream ss;
   ss << "[M] Subscription for " << topic << " created.";
   Print(ss.str());
 
-  Subscriber* sub = new Subscriber(zmq_context_, subscriber_address_, topic);
+  Subscriber* sub = new Subscriber(zmq_context_, subscriber_address_, topic, callback);
   subscriptions_.push_back(sub);
   sub->Start();
 }
@@ -106,25 +107,29 @@ void App::CheckSubscriptions() {
       Print(ss.str());
       ss.str("");
       (*it)->new_msg_ = false;
-      std::string str;
+      std::string msg_str;
+      size_t msg_size;
       (*it)->mutex_.lock();
-      str.assign(static_cast<char *>((*it)->msg_.data()), (*it)->msg_.size());
+      msg_str.assign(static_cast<char *>((*it)->msg_.data()), (*it)->msg_.size());
+      msg_size = (*it)->msg_.size();
       (*it)->mutex_.unlock();
-      std::cout << "Received: " << str << std::endl;
+      size_t msg_start = msg_str.find_first_of("_");
+      (*it)->callback_((uint8_t*)msg_str.data()+(msg_start+1), msg_size-(msg_start+1));
     }
   }
 }
 
-void App::PublishString(const std::string& msg, size_t msg_size) {
-  int rc = zmq_send(*zmq_socket_, msg.data(), msg_size, 0);
+void App::PublishString(std::string topic, std::string msg, size_t msg_size) {
+  Publish(topic, (uint8_t*)msg.data(), msg.length());
+  // int rc = zmq_send(*zmq_socket_, msg.data(), msg_size, 0);
 }
 
 void App::Publish(std::string topic, uint8_t* msg, size_t msg_size) {
   topic.append("_");
-  unsigned int total_len = msg_size + topic.size();
+  unsigned int total_len = msg_size + topic.length();
   uint8_t *buffer= new uint8_t[total_len];
-  memcpy(buffer, topic.data(), sizeof(topic));
-  memcpy(buffer+sizeof(topic), msg, sizeof(msg));
+  memcpy(buffer, topic.data(), topic.length());
+  memcpy(buffer+topic.length(), msg, msg_size);
   int rc = zmq_send(*zmq_socket_, buffer, (size_t)total_len, 0);
 }
 

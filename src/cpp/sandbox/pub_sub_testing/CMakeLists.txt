@@ -45,3 +45,11 @@ SET(SRC
 ADD_EXECUTABLE(pub_nav_topic1_sub_nav_topic2 ${SRC})
 TARGET_LINK_LIBRARIES(pub_nav_topic1_sub_nav_topic2 minnow_app -lyaml-cpp -lzmq -lpthread )
 install(TARGETS pub_nav_topic1_sub_nav_topic2 DESTINATION ${project_BIN_DIR}/)
+
+# Minnow example app with flatbuffers 2
+SET(SRC
+  pub_nav_topic2_sub_nav_topic1.cpp
+)
+ADD_EXECUTABLE(pub_nav_topic2_sub_nav_topic1 ${SRC})
+TARGET_LINK_LIBRARIES(pub_nav_topic2_sub_nav_topic1 minnow_app -lyaml-cpp -lzmq -lpthread )
+install(TARGETS pub_nav_topic2_sub_nav_topic1 DESTINATION ${project_BIN_DIR}/)

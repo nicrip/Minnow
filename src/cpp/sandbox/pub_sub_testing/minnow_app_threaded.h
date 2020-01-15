@@ -13,15 +13,16 @@
 class Subscriber
 {
 public:
-  Subscriber(zmq::context_t* context, std::string address, std::string topic);
+  Subscriber(zmq::context_t* context, std::string address, std::string topic, std::function<void(uint8_t* msg, size_t msg_size)> callback);
   ~Subscriber();
   void Start();
   void Stop();
 
-  std::mutex mutex_;
   std::string topic_;
   std::atomic<bool> new_msg_;
+  std::mutex mutex_;
   zmq::message_t msg_;
+  std::function<void(uint8_t* msg, size_t msg_size)> callback_;
 
 private:
   void Run();
@@ -61,10 +62,10 @@ public:
 
 protected:
   void ExitSignal(int s);
-  void Subscribe(std::string topic);
+  void Subscribe(std::string topic, std::function<void(uint8_t* msg, size_t msg_size)> callback);
   void CheckSubscriptions();
-  void PublishString(const std::string& msg, size_t msg_size);
-  void Publish(std::string topic ,uint8_t* msg, size_t msg_size);
+  void PublishString(std::string topic, std::string msg, size_t msg_size);
+  void Publish(std::string topic, uint8_t* msg, size_t msg_size);
   template <typename T>
   T GetConfigParameter(std::string config_param) {
     try {
