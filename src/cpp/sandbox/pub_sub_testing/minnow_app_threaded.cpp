@@ -1,16 +1,15 @@
 #include <iostream>
 #include <sstream>
 #include <signal.h>
-#include <chrono>
 #include <zmq.hpp>
 #include "minnow_app_threaded.h"
 
 using namespace std::chrono;
 
-Subscriber::Subscriber(zmq::context_t* context, std::string sub_address, std::string topic) : receive_active(false), new_msg(false) {
-  zmq_context = context;
-  address = sub_address;
-  subscribed_topic = topic;
+Subscriber::Subscriber(zmq::context_t* context, std::string address, std::string topic) : receive_active_(false), new_msg_(false) {
+  zmq_context_ = context;
+  address_ = address;
+  topic_ = topic;
 }
 
 Subscriber::~Subscriber() {
@@ -18,43 +17,45 @@ Subscriber::~Subscriber() {
 }
 
 void Subscriber::Start() {
-  receive_active = true;
+  receive_active_ = true;
   std::thread ReceiveThread(&Subscriber::Run, this);
   ReceiveThread.detach();
 }
 
 void Subscriber::Stop() {
-  receive_active = false;
+  receive_active_ = false;
 }
 
 void Subscriber::Run() {
   std::stringstream ss;
-  ss << "[T] Starting subscriber thread for topic: " << subscribed_topic;
+  ss << "[T] Starting subscriber thread for topic: " << topic_;
   Print(ss.str());
   ss.str("");
 
-  zmq::socket_t subscriber(*zmq_context, ZMQ_SUB);
-  zmq_connect(subscriber, address.c_str());
-  zmq_setsockopt(subscriber, ZMQ_SUBSCRIBE, subscribed_topic.c_str(), subscribed_topic.size());
+  zmq::socket_t subscriber(*zmq_context_, ZMQ_SUB);
+  zmq_connect(subscriber, address_.c_str());
+  zmq_setsockopt(subscriber, ZMQ_SUBSCRIBE, topic_.c_str(), topic_.size());
   std::vector<zmq::pollitem_t> p = {{subscriber, 0, ZMQ_POLLIN, 0}};
-  while(receive_active) {
+  while(receive_active_) {
     zmq_poll(p.data(), 1, 1000);
     if (p[0].revents & ZMQ_POLLIN) {
-      subscriber.recv(&msg, ZMQ_DONTWAIT);
-      new_msg = true;
+      mutex_.lock();
+      subscriber.recv(&msg_, ZMQ_DONTWAIT);
+      mutex_.unlock();
+      new_msg_ = true;
     }
   }
 
-  ss << "[T] Stopping subscriber thread for topic: " << subscribed_topic;
+  ss << "[T] Stopping subscriber thread for topic: " << topic_;
   Print(ss.str());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 App::App() {
-  zmq_context = new zmq::context_t(1);
-  zmq_socket = new zmq::socket_t(*zmq_context, ZMQ_PUB);
-  sleep_ms = 0;
+  zmq_context_ = new zmq::context_t(1);
+  zmq_socket_ = new zmq::socket_t(*zmq_context_, ZMQ_PUB);
+  sleep_us_ = 10000;  // 100Hz default
 
   cpphandler = std::bind(&App::ExitSignal, this, std::placeholders::_1);
   struct sigaction sigIntHandler;
@@ -65,13 +66,17 @@ App::App() {
 }
 
 App::~App() {
-
+  for(std::vector<Subscriber*>::iterator it = subscriptions_.begin(); it != subscriptions_.end(); ++it) {
+    delete *it;
+  }
+  delete zmq_socket_;
+  delete zmq_context_;
 }
 
 void App::ExitSignal(int s) {
   std::stringstream ss;
-  for(std::vector<Subscriber*>::iterator it = subscriptions.begin(); it != subscriptions.end(); ++it) {
-    ss << "[M] Subscription for " << (*it)->subscribed_topic << " killed.";
+  for(std::vector<Subscriber*>::iterator it = subscriptions_.begin(); it != subscriptions_.end(); ++it) {
+    ss << "[M] Subscription for " << (*it)->topic_ << " killed.";
     Print(ss.str());
     ss.str("");
 
@@ -79,7 +84,7 @@ void App::ExitSignal(int s) {
   }
   std::this_thread::sleep_for(milliseconds(1500));
   Print("Exiting Minnow App...");
-  zmq_ctx_destroy(zmq_context);
+  zmq_ctx_destroy(zmq_context_);
   exit(1);
 }
 
@@ -88,28 +93,30 @@ void App::Subscribe(std::string topic) {
   ss << "[M] Subscription for " << topic << " created.";
   Print(ss.str());
 
-  Subscriber* sub = new Subscriber(zmq_context, subscriber_address, topic);
-  subscriptions.push_back(sub);
+  Subscriber* sub = new Subscriber(zmq_context_, subscriber_address_, topic);
+  subscriptions_.push_back(sub);
   sub->Start();
 }
 
 void App::CheckSubscriptions() {
   std::stringstream ss;
-  for(std::vector<Subscriber*>::iterator it = subscriptions.begin(); it != subscriptions.end(); ++it) {
-    if((*it)->new_msg) {
-      ss << "[M] New message from " << (*it)->subscribed_topic << ".";
+  for(std::vector<Subscriber*>::iterator it = subscriptions_.begin(); it != subscriptions_.end(); ++it) {
+    if((*it)->new_msg_) {
+      ss << "[M] New message from " << (*it)->topic_ << ".";
       Print(ss.str());
       ss.str("");
-      (*it)->new_msg = false;
+      (*it)->new_msg_ = false;
       std::string str;
-      str.assign(static_cast<char *>((*it)->msg.data()), (*it)->msg.size());
+      (*it)->mutex_.lock();
+      str.assign(static_cast<char *>((*it)->msg_.data()), (*it)->msg_.size());
+      (*it)->mutex_.unlock();
       std::cout << "Received: " << str << std::endl;
     }
   }
 }
 
 void App::PublishString(const std::string& msg, size_t msg_size) {
-  int rc = zmq_send(*zmq_socket, msg.data(), msg_size, 0);
+  int rc = zmq_send(*zmq_socket_, msg.data(), msg_size, 0);
 }
 
 void App::Publish(std::string topic, uint8_t* msg, size_t msg_size) {
@@ -118,24 +125,24 @@ void App::Publish(std::string topic, uint8_t* msg, size_t msg_size) {
   uint8_t *buffer= new uint8_t[total_len];
   memcpy(buffer, topic.data(), sizeof(topic));
   memcpy(buffer+sizeof(topic), msg, sizeof(msg));
-  int rc = zmq_send(*zmq_socket, buffer, (size_t)total_len, 0);
+  int rc = zmq_send(*zmq_socket_, buffer, (size_t)total_len, 0);
 }
 
 void App::SetConfig(std::string config_file) {
   try {
-		config = YAML::LoadFile(config_file);
+		config_ = YAML::LoadFile(config_file);
 	} catch (...) {
 		std::cout << "[C] Configuration file \"" << config_file << "\" not found... Exiting." << std::endl;
 		exit(0);
 	}
   try {
-    protocol = config["protocol"].as<std::string>();
-    host = config["host"].as<std::string>();
-    if(protocol == "ipc") {
+    protocol_ = config_["protocol"].as<std::string>();
+    host_ = config_["host"].as<std::string>();
+    if(protocol_ == "ipc") {
       std::cout << "[C] Using inter-process communications (ipc)." << std::endl;
-    } else if(protocol == "tcp") {
+    } else if(protocol_ == "tcp") {
       std::cout << "[C] Using transmission control protocol (tcp)." << std::endl;
-      port = config["port"].as<int>();
+      port_ = config_["port"].as<int>();
     } else {
       std::cout << "[C] Unknown communications protocol... Exiting." << std::endl;
       exit(0);
@@ -148,40 +155,42 @@ void App::SetConfig(std::string config_file) {
 
 void App::Run() {
   std::stringstream ss;
-  ss << "[M] Starting Minnow App \"" << name << "\"!";
+  ss << "[M] Starting Minnow App \"" << name_ << "\"!";
   Print(ss.str());
   ss.str("");
 
-  if(protocol == "ipc") {
-    ss << "ipc://" << host << ".sub";
-  } else if(protocol == "tcp") {
-    ss << "tcp://" << host << ":" << port+1;
+  if(protocol_ == "ipc") {
+    ss << "ipc://" << host_ << ".sub";
+  } else if(protocol_ == "tcp") {
+    ss << "tcp://" << host_ << ":" << port_+1;
   }
   std::string socket = ss.str();
   std::cout << "[C] Publishing address: " << socket << std::endl;
-  zmq_connect(*zmq_socket, socket.c_str());
+  zmq_connect(*zmq_socket_, socket.c_str());
   ss.str("");
-  if(protocol == "ipc") {
-    ss << "ipc://" << host << ".pub";
-  } else if(protocol == "tcp") {
-    ss << "tcp://" << host << ":" << port;
+  if(protocol_ == "ipc") {
+    ss << "ipc://" << host_ << ".pub";
+  } else if(protocol_ == "tcp") {
+    ss << "tcp://" << host_ << ":" << port_;
   }
-  subscriber_address = ss.str();
-  std::cout << "[C] Subscribing address: " << subscriber_address << std::endl;
+  subscriber_address_ = ss.str();
+  std::cout << "[C] Subscribing address: " << subscriber_address_ << std::endl;
 
   Init();
 
   while(true) {
-    auto start = high_resolution_clock::now();
+    if(sleep_us_ != 0) loop_start_ = high_resolution_clock::now();
 
     CheckSubscriptions();
     Process();
 
-    auto stop = high_resolution_clock::now();
-    auto duration = duration_cast<microseconds>(stop - start);
-    int rem_usecs = sleep_ms*1000 - duration.count();
-    if(rem_usecs > 0) {
-      std::this_thread::sleep_for(microseconds(rem_usecs));
+    if(sleep_us_ != 0) {
+      loop_end_ = high_resolution_clock::now();
+      loop_us_ = duration_cast<microseconds>(loop_end_ - loop_start_);
+      int rem_usecs = sleep_us_ - loop_us_.count();
+      if(rem_usecs > 0) {
+        std::this_thread::sleep_for(microseconds(rem_usecs));
+      }
     }
   }
 }

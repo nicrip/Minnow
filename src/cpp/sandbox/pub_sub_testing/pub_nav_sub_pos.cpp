@@ -27,7 +27,7 @@ SampleApp1::~SampleApp1() {
 
 void SampleApp1::Init() {
   unsigned int tick = GetConfigParameter<unsigned int>("tick");
-  SetTick(tick);
+  SetHz(tick);
   count = 0;
   Subscribe("POS_");
   Subscribe("PRESS_");
@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
   }
   std::string config_file = argv[1];
   SampleApp1 sample_app1;
-  sample_app1.SetAppName("test_app1");
+  sample_app1.SetName("test_app1");
   sample_app1.SetConfig(config_file);
   sample_app1.Run();
 }
