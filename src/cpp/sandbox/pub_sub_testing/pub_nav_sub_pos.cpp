@@ -12,8 +12,8 @@ public:
 protected:
   void Process();
   void Init();
-  void CallBackPos(uint8_t* msg, size_t msg_size);
-  void CallBackPress(uint8_t* msg, size_t msg_size);
+  void CallBackPos(uint8_t* msg, size_t msg_size, std::string topic);
+  void CallBackPress(uint8_t* msg, size_t msg_size, std::string topic);
 
 private:
   unsigned int count;
@@ -27,22 +27,22 @@ SampleApp1::~SampleApp1() {
 
 }
 
-void SampleApp1::CallBackPos(uint8_t* msg, size_t msg_size) {
+void SampleApp1::CallBackPos(uint8_t* msg, size_t msg_size, std::string topic) {
   std::string test(msg, msg+msg_size);
-  std::cout << "Callback on POS received: " << test << std::endl;
+  std::cout << "Callback received for topic \"" << topic << "\": " << test << std::endl;
 }
 
-void SampleApp1::CallBackPress(uint8_t* msg, size_t msg_size) {
+void SampleApp1::CallBackPress(uint8_t* msg, size_t msg_size, std::string topic) {
   std::string test(msg, msg+msg_size);
-  std::cout << "Callback on PRESS received: " << test << std::endl;
+  std::cout << "Callback received for topic \"" << topic << "\": " << test << std::endl;
 }
 
 void SampleApp1::Init() {
   unsigned int tick = GetConfigParameter<unsigned int>("tick");
   SetHz(tick);
   count = 0;
-  Subscribe("POS", [this](uint8_t* msg, size_t msg_size){CallBackPos(msg, msg_size);});
-  Subscribe("PRESS", [this](uint8_t* msg, size_t msg_size){CallBackPress(msg, msg_size);});
+  Subscribe("POS", [this](uint8_t* msg, size_t msg_size, std::string topic){CallBackPos(msg, msg_size, topic);});
+  Subscribe("PRESS", [this](uint8_t* msg, size_t msg_size, std::string topic){CallBackPress(msg, msg_size, topic);});
 }
 
 void SampleApp1::Process() {

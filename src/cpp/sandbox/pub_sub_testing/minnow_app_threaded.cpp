@@ -6,21 +6,21 @@
 
 using namespace std::chrono;
 
-Subscriber::Subscriber(zmq::context_t* context, std::string address, std::string topic, std::function<void(uint8_t* msg, size_t msg_size)> callback) : receive_active_(false), new_msg_(false) {
-  zmq_context_ = context;
+Subscriber::Subscriber(App* app, std::string address, std::string topic, std::function<void(uint8_t* msg, size_t msg_size, std::string topic)> callback) : receive_active_(false), new_msg_(false) {
+  app_ = app;
+  zmq_context_ = app_->zmq_context_;
   address_ = address;
   topic_ = topic;
   callback_ = callback;
 }
 
 Subscriber::~Subscriber() {
-
+  receive_thread_.join();
 }
 
 void Subscriber::Start() {
   receive_active_ = true;
-  std::thread ReceiveThread(&Subscriber::Run, this);
-  ReceiveThread.detach();
+  receive_thread_ = std::thread(&Subscriber::Run, this);
 }
 
 void Subscriber::Stop() {
@@ -33,6 +33,11 @@ void Subscriber::Run() {
   Print(ss.str());
   ss.str("");
 
+  // variables for message matching
+  std::string msg_str;
+  size_t msg_size;
+  bool subscribed;
+
   zmq::socket_t subscriber(*zmq_context_, ZMQ_SUB);
   zmq_connect(subscriber, address_.c_str());
   zmq_setsockopt(subscriber, ZMQ_SUBSCRIBE, topic_.c_str(), topic_.size());
@@ -42,8 +47,23 @@ void Subscriber::Run() {
     if (p[0].revents & ZMQ_POLLIN) {
       mutex_.lock();
       subscriber.recv(&msg_, ZMQ_DONTWAIT);
+      // copy message into local variable for checking
+      msg_str.assign(static_cast<char *>(msg_.data()), msg_.size());
+      msg_size = msg_.size();
       mutex_.unlock();
-      new_msg_ = true;
+
+      // check for message match - if not a match, spin up a new subscriber for the new message
+      size_t msg_start = msg_str.find_first_of("_");
+      std::string topic = msg_str.substr(0,msg_start);
+      if(topic == topic_) {
+        new_msg_ = true;
+      } else {
+        new_msg_ = false;
+        subscribed = app_->CheckSubscriptionToTopic(topic);
+        if(!subscribed) {
+          app_->Subscribe(topic, callback_);
+        }
+      }
     }
   }
 
@@ -89,18 +109,30 @@ void App::ExitSignal(int s) {
   exit(1);
 }
 
-void App::Subscribe(std::string topic, std::function<void(uint8_t* msg, size_t msg_size)> callback) {
+void App::Subscribe(std::string topic, std::function<void(uint8_t* msg, size_t msg_size, std::string topic)> callback) {
   std::stringstream ss;
   ss << "[M] Subscription for " << topic << " created.";
   Print(ss.str());
 
-  Subscriber* sub = new Subscriber(zmq_context_, subscriber_address_, topic, callback);
+  Subscriber* sub = new Subscriber(this, subscriber_address_, topic, callback);
+  mutex_.lock();
   subscriptions_.push_back(sub);
+  subscription_topics_.push_back(topic);
+  mutex_.unlock();
   sub->Start();
+}
+
+bool App::CheckSubscriptionToTopic(std::string topic) {
+  bool subscribed = false;
+  for(std::vector<std::string>::iterator it = subscription_topics_.begin(); it != subscription_topics_.end(); ++it) {
+    if(topic == (*it)) subscribed = true;
+  }
+  return subscribed;
 }
 
 void App::CheckSubscriptions() {
   std::stringstream ss;
+  mutex_.lock();
   for(std::vector<Subscriber*>::iterator it = subscriptions_.begin(); it != subscriptions_.end(); ++it) {
     if((*it)->new_msg_) {
       ss << "[M] New message from " << (*it)->topic_ << ".";
@@ -114,14 +146,14 @@ void App::CheckSubscriptions() {
       msg_size = (*it)->msg_.size();
       (*it)->mutex_.unlock();
       size_t msg_start = msg_str.find_first_of("_");
-      (*it)->callback_((uint8_t*)msg_str.data()+(msg_start+1), msg_size-(msg_start+1));
+      (*it)->callback_((uint8_t*)msg_str.data()+(msg_start+1), msg_size-(msg_start+1), msg_str.substr(0,msg_start));
     }
   }
+  mutex_.unlock();
 }
 
 void App::PublishString(std::string topic, std::string msg, size_t msg_size) {
   Publish(topic, (uint8_t*)msg.data(), msg.length());
-  // int rc = zmq_send(*zmq_socket_, msg.data(), msg_size, 0);
 }
 
 void App::Publish(std::string topic, uint8_t* msg, size_t msg_size) {

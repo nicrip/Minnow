@@ -16,7 +16,7 @@ public:
 protected:
   void Process();
   void Init();
-  void CallBack(uint8_t* msg, size_t msg_size);
+  void CallBack(uint8_t* msg, size_t msg_size, std::string topic);
 
 private:
   void SetMessageTopic2();
@@ -35,12 +35,21 @@ SampleApp2::~SampleApp2() {
 
 }
 
-void SampleApp2::CallBack(uint8_t* msg, size_t msg_size) {
-  std::cout << "Callback for nav.topic1" << std::endl;
-  auto topic1 = topics::nav::Gettopic1(msg);
-  auto time = topic1->time();
-  auto val = topic1->test()->c_str();
-  std::cout << std::fixed << time << " " << val << std::endl;
+void SampleApp2::CallBack(uint8_t* msg, size_t msg_size, std::string topic) {
+  std::cout << "Callback received for topic \"" << topic << "\"" << std::endl;
+  if(topic == "nav.topic1") {
+    auto topic1 = topics::nav::Gettopic1(msg);
+    auto time = topic1->time();
+    auto val = topic1->test()->c_str();
+    std::cout << std::fixed << time << " " << val << std::endl;
+  } else if(topic == "nav.topic2") {
+    auto topic2 = topics::nav::Gettopic2(msg);
+    auto time = topic2->time();
+    auto val = topic2->test()->c_str();
+    std::cout << std::fixed << time << " " << val << std::endl;
+  } else {
+    std::cout << "Unknown message \"" << topic << "\"" << std::endl;
+  }
 }
 
 void SampleApp2::SetMessageTopic2() {
@@ -68,7 +77,8 @@ void SampleApp2::Init() {
   SetHz(tick);
   count = 0;
   builder = new flatbuffers::FlatBufferBuilder();
-  Subscribe("nav.topic1", [this](uint8_t* msg, size_t msg_size){CallBack(msg, msg_size);});
+  // subscribe for all nav messages!
+  Subscribe("nav", [this](uint8_t* msg, size_t msg_size, std::string topic){CallBack(msg, msg_size, topic);});
 }
 
 void SampleApp2::Process() {

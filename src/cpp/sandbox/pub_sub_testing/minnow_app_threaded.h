@@ -10,19 +10,21 @@
 #ifndef MINNOW_APP_THREADED_HDR
 #define MINNOW_APP_THREADED_HDR
 
+class App;
+
 class Subscriber
 {
 public:
-  Subscriber(zmq::context_t* context, std::string address, std::string topic, std::function<void(uint8_t* msg, size_t msg_size)> callback);
+  Subscriber(App* app, std::string address, std::string topic, std::function<void(uint8_t* msg, size_t msg_size, std::string topic)> callback);
   ~Subscriber();
   void Start();
   void Stop();
 
   std::string topic_;
   std::atomic<bool> new_msg_;
-  std::mutex mutex_;
+  std::mutex mutex_;  // mutex for locking msg_ access
   zmq::message_t msg_;
-  std::function<void(uint8_t* msg, size_t msg_size)> callback_;
+  std::function<void(uint8_t* msg, size_t msg_size, std::string topic)> callback_;
 
 private:
   void Run();
@@ -31,6 +33,8 @@ private:
     std::cout << a << std::endl;
   }
 
+  App* app_;
+  std::thread receive_thread_;
   std::string address_;
   zmq::context_t* zmq_context_;
   std::atomic<bool> receive_active_;
@@ -54,15 +58,19 @@ class App
 public:
   App();
   ~App();
+  void Subscribe(std::string topic, std::function<void(uint8_t* msg, size_t msg_size, std::string topic)> callback);
+  bool CheckSubscriptionToTopic(std::string topic);
   void Run();
   void SetName(std::string name) {
     name_ = name;
   }
   void SetConfig(std::string config_file);
 
+  zmq::context_t* zmq_context_;
+  std::mutex mutex_;  // mutex for locking subscriptions_ access
+
 protected:
   void ExitSignal(int s);
-  void Subscribe(std::string topic, std::function<void(uint8_t* msg, size_t msg_size)> callback);
   void CheckSubscriptions();
   void PublishString(std::string topic, std::string msg, size_t msg_size);
   void Publish(std::string topic, uint8_t* msg, size_t msg_size);
@@ -89,9 +97,9 @@ protected:
   virtual void Init() = 0;    // must be implemented by subclasses
   virtual void Process() = 0; // must be implemented by subclasses
 
-  zmq::context_t* zmq_context_;
   zmq::socket_t* zmq_socket_;
   std::vector<Subscriber*> subscriptions_;
+  std::vector<std::string> subscription_topics_;
   unsigned int sleep_us_;
 
 private:

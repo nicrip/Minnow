@@ -8,7 +8,7 @@ test_app2:
   tick: 1
 
 test_app_topic1:
-  tick: 0
+  tick: 5000
 
 test_app_topic2:
-  tick: 1
+  tick: 0

@@ -16,7 +16,7 @@ public:
 protected:
   void Process();
   void Init();
-  void CallBack(uint8_t* msg, size_t msg_size);
+  void CallBack(uint8_t* msg, size_t msg_size, std::string topic);
 
 private:
   void SetMessageTopic1();
@@ -35,8 +35,8 @@ SampleApp1::~SampleApp1() {
 
 }
 
-void SampleApp1::CallBack(uint8_t* msg, size_t msg_size) {
-  std::cout << "Callback for nav.topic2" << std::endl;
+void SampleApp1::CallBack(uint8_t* msg, size_t msg_size, std::string topic) {
+  std::cout << "Callback received for topic \"" << topic << "\"" << std::endl;
   auto topic2 = topics::nav::Gettopic2(msg);
   auto time = topic2->time();
   auto val = topic2->test()->c_str();
@@ -68,12 +68,13 @@ void SampleApp1::Init() {
   SetHz(tick);
   count = 0;
   builder = new flatbuffers::FlatBufferBuilder();
-  Subscribe("nav.topic2", [this](uint8_t* msg, size_t msg_size){CallBack(msg, msg_size);});
+  Subscribe("nav.topic2", [this](uint8_t* msg, size_t msg_size, std::string topic){CallBack(msg, msg_size, topic);});
 }
 
 void SampleApp1::Process() {
   SetMessageTopic1();
   Publish("nav.topic1", msg_buf, msg_size);
+  PublishString("nav.fakemsg", "FAKE MESSAGE", 12);
 }
 
 int main(int argc, char *argv[])

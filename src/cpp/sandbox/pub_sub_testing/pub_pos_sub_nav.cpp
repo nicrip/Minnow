@@ -12,7 +12,7 @@ public:
 protected:
   void Process();
   void Init();
-  void CallBack(uint8_t* msg, size_t msg_size);
+  void CallBack(uint8_t* msg, size_t msg_size, std::string topic);
 
 private:
   unsigned int count;
@@ -26,16 +26,16 @@ SampleApp1::~SampleApp1() {
 
 }
 
-void SampleApp1::CallBack(uint8_t* msg, size_t msg_size) {
+void SampleApp1::CallBack(uint8_t* msg, size_t msg_size, std::string topic) {
   std::string test(msg, msg+msg_size);
-  std::cout << "Callback received: " << test << std::endl;
+  std::cout << "Callback received for topic \"" << topic << "\": " << test << std::endl;
 }
 
 void SampleApp1::Init() {
   unsigned int tick = GetConfigParameter<unsigned int>("tick");
   SetHz(tick);
   count = 0;
-  Subscribe("NAV", [this](uint8_t* msg, size_t msg_size){CallBack(msg, msg_size);});
+  Subscribe("NAV", [this](uint8_t* msg, size_t msg_size, std::string topic){CallBack(msg, msg_size, topic);});
 }
 
 void SampleApp1::Process() {
