@@ -15,7 +15,7 @@ Install network-manager using:
 And you can list available wifi connections using:
 
 ```
-> sudo iwlist scan
+> nmcli dev wifi
 ```
 
 And connect to a specific ESSID using:
