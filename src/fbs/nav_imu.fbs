@@ -1,0 +1,26 @@
+namespace topics.nav;
+
+table imu {
+  time:double;          // time since epoch in seconds
+  status:string;        // imu status ('locked' - valid data or 'converging' - waiting for convergence)
+  roll:double;
+  pitch:double;
+  yaw:double;
+  quaternion_0:double;
+  quaternion_x:double;
+  quaternion_y:double;
+  quaternion_z:double;
+  accel_x:double;
+  accel_y:double;
+  accel_z:double;
+  gyro_x:double;
+  gyro_y:double;
+  gyro_z:double;
+  mag_x:double;
+  mag_y:double;
+  mag_z:double;
+  pressure:double;
+  temperature:double;
+}
+
+root_type imu;

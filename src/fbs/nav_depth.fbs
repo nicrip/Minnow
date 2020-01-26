@@ -1,0 +1,10 @@
+namespace topics.nav;
+
+table depth {
+  time:double;          // time since epoch in seconds
+  temperature:double;   // temperature in Celsius
+  pressure:double;      // pressure in Millibar
+  depth_fluid:double;   // depth in meters (config fluid density)
+}
+
+root_type depth;
