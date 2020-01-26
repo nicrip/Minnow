@@ -19,3 +19,7 @@
 [submodule "src/cpp/libi2c"]
 	path = src/cpp/libi2c
 	url = https://github.com/amaork/libi2c
+[submodule "src/cpp/minnow_drivers/cppMS5837"]
+	path = src/cpp/minnow_drivers/cppMS5837
+	url = https://github.com/nicrip/cppMS5837
+	branch = lib
