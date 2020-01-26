@@ -16,3 +16,6 @@
 [submodule "src/cpp/flatbuffers"]
 	path = src/cpp/flatbuffers
 	url = https://github.com/google/flatbuffers.git
+[submodule "src/cpp/libi2c"]
+	path = src/cpp/libi2c
+	url = https://github.com/amaork/libi2c
