@@ -1,0 +1,7 @@
+protocol: ipc
+host: /home/debian/Minnow/src/cpp/minnow_comms/minnow
+
+app_depth:
+  tick: 100
+  fluid_density: 997
+  oversampling: 1
