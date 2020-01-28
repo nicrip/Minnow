@@ -5,3 +5,6 @@ app_depth:
   tick: 100
   fluid_density: 997
   oversampling: 1
+
+app_gps:
+  tick: 10
