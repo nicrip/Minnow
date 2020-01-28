@@ -34,15 +34,16 @@ class Depth(App):
         topics.nav.depth.depthAddPressure(self.fb_builder, self.ms5837.get_pressure(pyMS5837.UNITS_mbar))
         self.ms5837.fluid_density = pyMS5837.DENSITY_FRESHWATER
         freshwater_depth = self.ms5837.get_depth()
-        self.ms5837.fluid_density = pyMS5837.DENSITY_SALTWATER
-        saltwater_depth = self.ms5837.get_depth()
-        topics.nav.depth.depthAddDepthFresh(self.fb_builder, freshwater_depth)
-        topics.nav.depth.depthAddDepthSalt(self.fb_builder, saltwater_depth)
+        topics.nav.depth.depthAddDepthFluid(self.fb_builder, freshwater_depth)
+        #self.ms5837.fluid_density = pyMS5837.DENSITY_SALTWATER
+        #saltwater_depth = self.ms5837.get_depth()
+        #topics.nav.depth.depthAddDepthFresh(self.fb_builder, freshwater_depth)
+        #topics.nav.depth.depthAddDepthSalt(self.fb_builder, saltwater_depth)
 
         print('Temperature: {:6.2f} C'.format(self.ms5837.get_temperature(pyMS5837.UNITS_Celsius)))
         print('Pressure: {:6.2f} mbar'.format(self.ms5837.get_pressure(pyMS5837.UNITS_mbar)))
         print('Depth (freshwater): {:6.2f} m'.format(freshwater_depth))
-        print('Depth (saltwater): {:6.2f} m'.format(saltwater_depth))
+        #print('Depth (saltwater): {:6.2f} m'.format(saltwater_depth))
         print('')
 
         depth_msg = topics.nav.depth.depthEnd(self.fb_builder)
