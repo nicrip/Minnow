@@ -23,3 +23,9 @@ And connect to a specific ESSID using:
 ```
 > sudo nmcli device wifi connect "MIT SECURE" password "pass"
 ```
+
+To forget (delete) a network, use:  
+
+```
+nmcli connection delete id "MIT SECURE"
+```
