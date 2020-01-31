@@ -2,11 +2,11 @@
 #include <sstream>
 #include <zmq.hpp>
 #include "flatbuffers/flatbuffers.h"
-#include "minnow_comms/minnow_app_threaded.h"
+#include "../minnow_comms/minnow_app_threaded.h"
 // flatbuffer topics
-#include "topics/nav_gps_generated.h"
+#include "../topics/nav_gps_generated.h"
 // gps driver ZOEM8
-#include "minnow_drivers/cppZOEM8/cppZOEM8.h"
+#include "../minnow_drivers/cppZOEM8/cppZOEM8.h"
 
 class AppGPS : public App
 {

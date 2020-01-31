@@ -9,16 +9,16 @@
 	path = src/python/minnow_drivers/pyZOEM8
 	url = https://github.com/nicrip/pyZOEM8.git
 [submodule "src/cpp/cppzmq"]
-	path = src/cpp/cppzmq
+	path = src/cpp/external/cppzmq
 	url = https://github.com/zeromq/cppzmq
 [submodule "src/cpp/yaml-cpp"]
-	path = src/cpp/yaml-cpp
+	path = src/cpp/external/yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp
 [submodule "src/cpp/flatbuffers"]
-	path = src/cpp/flatbuffers
+	path = src/cpp/external/flatbuffers
 	url = https://github.com/google/flatbuffers.git
 [submodule "src/cpp/libi2c"]
-	path = src/cpp/libi2c
+	path = src/cpp/external/libi2c
 	url = https://github.com/amaork/libi2c
 [submodule "src/cpp/minnow_drivers/cppMS5837"]
 	path = src/cpp/minnow_drivers/cppMS5837
