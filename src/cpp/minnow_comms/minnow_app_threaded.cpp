@@ -127,7 +127,10 @@ void App::Subscribe(std::string topic, std::function<void(uint8_t* msg, size_t m
 bool App::CheckSubscriptionToTopic(std::string topic) {
   bool subscribed = false;
   for(std::vector<std::string>::iterator it = subscription_topics_.begin(); it != subscription_topics_.end(); ++it) {
-    if(topic == (*it)) subscribed = true;
+    if(topic == (*it)) {
+			subscribed = true;
+			break;
+		}
   }
   return subscribed;
 }
