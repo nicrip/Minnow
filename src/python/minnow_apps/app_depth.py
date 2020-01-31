@@ -13,46 +13,51 @@ import topics.nav.depth
 # depth driver MS5837
 from minnow_drivers.pyMS5837 import pyMS5837
 
-class Depth(App):
+class AppDepth(App):
     def __init__(self):
         super().__init__()
-        self.setup_subscribers()
-        # setup flatbuffers
-        self.fb_builder = flatbuffers.Builder(1024)
-        # setup depth sensor
-        self.ms5837 = pyMS5837.MS5837(2, model=pyMS5837.MODEL_30BA, fluid_density=pyMS5837.DENSITY_FRESHWATER, oversampling=pyMS5837.OSR_8192)
+        self.builder = None
+        self.msg = None
+        self.depth_sensor = None
 
-    def setup_subscribers(self):
-        pass    # no subscriptions for this app
+    def set_message_nav_depth(self):
+        topics.nav.depth.depthStart(self.builder)
+        topics.nav.depth.depthAddTime(self.builder, time.time())
+        topics.nav.depth.depthAddTemperature(self.builder, self.depth_sensor.get_temperature(pyMS5837.UNITS_Celsius))
+        topics.nav.depth.depthAddPressure(self.builder, self.depth_sensor.get_pressure(pyMS5837.UNITS_mbar))
+        topics.nav.depth.depthAddDepthFluid(self.builder, self.depth_sensor.get_depth())
 
-    def process(self):
-        self.ms5837.read()
-
-        topics.nav.depth.depthStart(self.fb_builder)
-        topics.nav.depth.depthAddTime(self.fb_builder, time.time())
-        topics.nav.depth.depthAddTemperature(self.fb_builder, self.ms5837.get_temperature(pyMS5837.UNITS_Celsius))
-        topics.nav.depth.depthAddPressure(self.fb_builder, self.ms5837.get_pressure(pyMS5837.UNITS_mbar))
-        self.ms5837.fluid_density = pyMS5837.DENSITY_FRESHWATER
-        freshwater_depth = self.ms5837.get_depth()
-        topics.nav.depth.depthAddDepthFluid(self.fb_builder, freshwater_depth)
-        #self.ms5837.fluid_density = pyMS5837.DENSITY_SALTWATER
-        #saltwater_depth = self.ms5837.get_depth()
-        #topics.nav.depth.depthAddDepthFresh(self.fb_builder, freshwater_depth)
-        #topics.nav.depth.depthAddDepthSalt(self.fb_builder, saltwater_depth)
-
-        print('Temperature: {:6.2f} C'.format(self.ms5837.get_temperature(pyMS5837.UNITS_Celsius)))
-        print('Pressure: {:6.2f} mbar'.format(self.ms5837.get_pressure(pyMS5837.UNITS_mbar)))
-        print('Depth (freshwater): {:6.2f} m'.format(freshwater_depth))
-        #print('Depth (saltwater): {:6.2f} m'.format(saltwater_depth))
+        print('Temperature: {:6.2f} C'.format(self.depth_sensor.get_temperature(pyMS5837.UNITS_Celsius)))
+        print('Pressure: {:6.2f} mbar'.format(self.depth_sensor.get_pressure(pyMS5837.UNITS_mbar)))
+        print('Depth: {:6.2f} m'.format(self.depth_sensor.get_depth()))
         print('')
 
-        depth_msg = topics.nav.depth.depthEnd(self.fb_builder)
-        self.fb_builder.Finish(depth_msg)
-        bin_depth_msg = self.fb_builder.Output()
-        self.publish(b'nav.depth' + b' ' + bin_depth_msg)
+        depth_msg = topics.nav.depth.depthEnd(self.builder)
+        self.builder.Finish(depth_msg)
+        self.msg = self.builder.Output()
 
-        time.sleep(0.01)
+    def init(self):
+        tick = self.get_config_parameter(int, "tick")
+        self.set_hz(tick)
+
+        fluid_density = get_config_parameter(float, "fluid_density");
+        oversampling = get_config_parameter(int, "oversampling");
+        self.depth_sensor = pyMS5837.MS5837(2, model=pyMS5837.MODEL_30BA, fluid_density=fluid_density, oversampling=oversampling)
+
+        self.builder = flatbuffers.Builder(1024)
+
+    def process(self):
+        self.set_message_nav_depth()
+        self.depth_sensor.read()
+        self.publish('nav.depth', self.msg)
 
 if __name__ == "__main__":
-    app = Depth()
-    app.run()
+    if len(sys.argv) < 2:
+        print("Expected a YAML configuration file... Exiting.")
+        sys.exit()
+    else:
+        config_file = sys.argv[1]
+    app_depth = AppDepth()
+    app_depth.set_name("app_depth")
+    app_depth.set_config(config_file)
+    app_depth.run()
