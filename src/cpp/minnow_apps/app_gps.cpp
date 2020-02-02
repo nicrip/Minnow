@@ -83,8 +83,8 @@ void AppGPS::Init() {
 }
 
 void AppGPS::Process() {
-  SetMessageNavGPS();
   gps_sensor.read();
+  SetMessageNavGPS();
   Publish("nav.gps", msg_buf, msg_size);
 }
 

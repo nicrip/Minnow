@@ -47,8 +47,8 @@ class AppDepth(App):
         self.builder = flatbuffers.Builder(1024)
 
     def process(self):
-        self.set_message_nav_depth()
         self.depth_sensor.read()
+        self.set_message_nav_depth()
         self.publish('nav.depth', self.msg)
 
 if __name__ == "__main__":

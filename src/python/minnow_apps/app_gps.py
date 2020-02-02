@@ -13,52 +13,62 @@ import topics.nav.gps
 # depth driver MS5837
 from minnow_drivers.pyZOEM8 import pyZOEM8
 
-class GPS(App):
+class AppGPS(App):
     def __init__(self):
         super().__init__()
-        self.setup_subscribers()
-        # setup flatbuffers
-        self.fb_builder = flatbuffers.Builder(1024)
-        # setup GPS sensor
-        self.zoe_m8q = pyZOEM8.ZOEM8(2)
+        self.builder = None
+        self.msg = None
+        self.gps_sensor = None
 
-    def setup_subscribers(self):
-        pass    # no subscriptions for this app
+    def set_message_nav_gps(self):
+        position_status = self.builder.CreateString(self.gps_sensor.position_status)
+        mode = self.builder.CreateString(self.gps_sensor.mode)
+        quality = self.builder.CreateString(self.gps_sensor.quality)
 
-    def process(self):
-        self.zoe_m8q.read()
+        topics.nav.gps.gpsStart(self.builder)
+        topics.nav.gps.gpsAddTime(self.builder, time.time())
+        topics.nav.gps.gpsAddStatus(self.builder, position_status)
+        topics.nav.gps.gpsAddLongitude(self.builder, mode)
+        topics.nav.gps.gpsAddLatitude(self.builder, quality)
+        topics.nav.gps.gpsAddAltitude(self.builder, self.gps_sensor.altitude)
+        topics.nav.gps.gpsAddUtc(self.builder, self.gps_sensor.utc)
+        topics.nav.gps.gpsAddNumSatellites(self.builder, self.gps_sensor.num_satellites)
+        topics.nav.gps.gpsAddSpeed(self.builder, self.gps_sensor.speed_over_ground)
+        topics.nav.gps.gpsAddCourse(self.builder, self.gps_sensor.course_over_ground)
+        topics.nav.gps.gpsAddHdop(self.builder, self.gps_sensor.horizontal_dilution)
+        topics.nav.gps.gpsAddMagDeclination(self.builder, self.gps_sensor.magnetic_declination)
 
-        position_status = self.fb_builder.CreateString(self.zoe_m8q.position_status)
-        mode = self.fb_builder.CreateString(self.zoe_m8q.mode)
-        quality = self.fb_builder.CreateString(self.zoe_m8q.quality)
-
-        topics.nav.gps.gpsStart(self.fb_builder)
-        topics.nav.gps.gpsAddTime(self.fb_builder, time.time())
-        topics.nav.gps.gpsAddStatus(self.fb_builder, position_status)
-        topics.nav.gps.gpsAddLongitude(self.fb_builder, mode)
-        topics.nav.gps.gpsAddLatitude(self.fb_builder, quality)
-        topics.nav.gps.gpsAddAltitude(self.fb_builder, self.zoe_m8q.altitude)
-        topics.nav.gps.gpsAddUtc(self.fb_builder, self.zoe_m8q.utc)
-        topics.nav.gps.gpsAddNumSatellites(self.fb_builder, self.zoe_m8q.num_satellites)
-        topics.nav.gps.gpsAddSpeed(self.fb_builder, self.zoe_m8q.speed_over_ground)
-        topics.nav.gps.gpsAddCourse(self.fb_builder, self.zoe_m8q.course_over_ground)
-        topics.nav.gps.gpsAddHdop(self.fb_builder, self.zoe_m8q.horizontal_dilution)
-        topics.nav.gps.gpsAddMagDeclination(self.fb_builder, self.zoe_m8q.magnetic_declination)
-
-        print('Quality: {}'.format(self.zoe_m8q.quality))
-        print('UTC: {:10.3f} s'.format(self.zoe_m8q.utc))
-        print('Latitude: {:6.5f} deg'.format(self.zoe_m8q.latitude))
-        print('Longitude: {:6.5f} deg'.format(self.zoe_m8q.longitude))
-        print('Magnetic Declination: {:6.5f} deg'.format(self.zoe_m8q.magnetic_declination))
+        print('Quality: {}'.format(self.gps_sensor.quality))
+        print('UTC: {:10.3f} s'.format(self.gps_sensor.utc))
+        print('Latitude: {:6.5f} deg'.format(self.gps_sensor.latitude))
+        print('Longitude: {:6.5f} deg'.format(self.gps_sensor.longitude))
+        print('Magnetic Declination: {:6.5f} deg'.format(self.gps_sensor.magnetic_declination))
         print('')
 
-        gps_msg = topics.nav.gps.gpsEnd(self.fb_builder)
-        self.fb_builder.Finish(gps_msg)
-        bin_gps_msg = self.fb_builder.Output()
-        self.publish(b'nav.gps' + b' ' + bin_gps_msg)
+        gps_msg = topics.nav.gps.gpsEnd(self.builder)
+        self.builder.Finish(gps_msg)
+        self.msg = self.builder.Output()
 
-        time.sleep(0.1)
+    def init(self):
+        tick = self.get_config_parameter(int, "tick")
+        self.set_hz(tick)
+
+        self.gps_sensor = pyZOEM8.ZOEM8(2)
+
+        self.builder = flatbuffers.Builder(1024)
+
+    def process(self):
+        self.gps_sensor.read()
+        self.set_message_nav_gps()
+        self.publish('nav.gps', self.msg)
 
 if __name__ == "__main__":
-    app = GPS()
-    app.run()
+    if len(sys.argv) < 2:
+        print("Expected a YAML configuration file... Exiting.")
+        sys.exit()
+    else:
+        config_file = sys.argv[1]
+    app_depth = AppDepth()
+    app_depth.set_name("app_depth")
+    app_depth.set_config(config_file)
+    app_depth.run()

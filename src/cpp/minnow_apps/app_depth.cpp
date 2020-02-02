@@ -77,8 +77,8 @@ void AppDepth::Init() {
 }
 
 void AppDepth::Process() {
-  SetMessageNavDepth();
   depth_sensor.read();
+  SetMessageNavDepth();
   Publish("nav.depth", msg_buf, msg_size);
 }
 
