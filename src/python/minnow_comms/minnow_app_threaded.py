@@ -109,7 +109,7 @@ class App:
                 topic_msg = msg_str.split('_',1)
                 topic = topic_msg[0]
                 msg = topic_msg[1]
-                subscriber.callback_(topic, msg)
+                subscriber.callback_(msg, topic)
         self.mutex_.release()
 
     def publish_string(self, topic, msg):

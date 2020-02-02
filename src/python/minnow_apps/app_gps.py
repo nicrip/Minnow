@@ -68,7 +68,7 @@ if __name__ == "__main__":
         sys.exit()
     else:
         config_file = sys.argv[1]
-    app_depth = AppDepth()
-    app_depth.set_name("app_depth")
-    app_depth.set_config(config_file)
-    app_depth.run()
+    app_gps = AppGPS()
+    app_gps.set_name("app_gps")
+    app_gps.set_config(config_file)
+    app_gps.run()

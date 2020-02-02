@@ -14,73 +14,87 @@ import topics.nav.gps
 # IMU driver USFS
 from minnow_drivers.pyUSFS import pyUSFS
 
-class IMU(App):
+class AppIMU(App):
     def __init__(self):
         super().__init__()
-        self.setup_subscribers()
-        # setup flatbuffers
-        self.fb_builder = flatbuffers.Builder(1024)
-        # setup IMU sensor
-        self.usfs = pyUSFS.USFS(2, calibrate=True)
-        # variables
+        self.builder = None
+        self.msg = None
+        self.imu_sensor = None
         self.nav_gps_msg = None
-        self.magnetic_declination = -14.42   # default declination at MIT
+        self.magnetic_declination = None
 
-    def setup_subscribers(self):
+    def nav_gps_callback(self, msg, topic):
+        print("Callback received for topic \"{}\"".format(topic))
+        if topic == "nav.gps":
+            self.nav_gps_msg = topics.nav.gps.gps.GetRootAsgps(msg, 0)
+        else:
+            print("Unknown message \"{}\"".format(topic))
+
+    def set_message_nav_imu(self):
+        if self.imu_sensor.algo_status == 8:
+            status = 'locked'
+        else:
+            status = 'converging'
+        imu_sensor_status = self.builder.CreateString(status)
+
+        topics.nav.imu.imuStart(self.builder)
+        topics.nav.imu.imuAddTime(self.builder, time.time())
+        topics.nav.imu.imuAddStatus(self.builder, imu_sensor_status)
+        topics.nav.imu.imuAddRoll(self.builder, self.imu_sensor.angle[0,0])
+        topics.nav.imu.imuAddPitch(self.builder, self.imu_sensor.angle[1,0])
+        topics.nav.imu.imuAddYaw(self.builder, self.imu_sensor.heading + self.magnetic_declination)
+        topics.nav.imu.imuAddQuaternion0(self.builder, self.imu_sensor.qt[0,0])
+        topics.nav.imu.imuAddQuaternionX(self.builder, self.imu_sensor.qt[1,0])
+        topics.nav.imu.imuAddQuaternionY(self.builder, self.imu_sensor.qt[2,0])
+        topics.nav.imu.imuAddQuaternionZ(self.builder, self.imu_sensor.qt[3,0])
+        topics.nav.imu.imuAddAccelX(self.builder, self.imu_sensor.accel_data[0])
+        topics.nav.imu.imuAddAccelY(self.builder, self.imu_sensor.accel_data[1])
+        topics.nav.imu.imuAddAccelZ(self.builder, self.imu_sensor.accel_data[2])
+        topics.nav.imu.imuAddGyroX(self.builder, self.imu_sensor.gyro_data[0,0])
+        topics.nav.imu.imuAddGyroY(self.builder, self.imu_sensor.gyro_data[1,0])
+        topics.nav.imu.imuAddGyroZ(self.builder, self.imu_sensor.gyro_data[2,0])
+        topics.nav.imu.imuAddMagX(self.builder, self.imu_sensor.mag_data[0,0])
+        topics.nav.imu.imuAddMagY(self.builder, self.imu_sensor.mag_data[1,0])
+        topics.nav.imu.imuAddMagZ(self.builder, self.imu_sensor.mag_data[2,0])
+        topics.nav.imu.imuAddPressure(self.builder, self.imu_sensor.pressure)
+        topics.nav.imu.imuAddTemperature(self.builder, self.imu_sensor.temperature)
+
+        print('Status: {}'.format(status))
+        print('Roll: {:6.5f} deg'.format(self.imu_sensor.angle[0,0]))
+        print('Pitch: {:6.5f} deg'.format(self.imu_sensor.angle[1,0]))
+        print('Yaw: {:6.5f} deg'.format(self.imu_sensor.heading + self.magnetic_declination))
+        print('Magnetic Declination: {:6.5f} deg'.format(self.magnetic_declination))
+        print('')
+
+        imu_msg = topics.nav.imu.imuEnd(self.builder)
+        self.builder.Finish(imu_msg)
+        self.msg = self.builder.Output()
+
+    def init(self):
+        tick = self.get_config_parameter(int, "tick")
+        self.set_hz(tick)
+
         self.subscribe('nav.gps', self.nav_gps_callback)    # subscribe to gps messages
 
-    def nav_gps_callback(self, msg):
-        self.nav_gps_msg = topics.nav.gps.gps.GetRootAsgps(msg, 0)
+        self.imu_sensor = pyUSFS.USFS(2, calibrate=True)
+
+        self.builder = flatbuffers.Builder(1024)
 
     def process(self):
         if self.nav_gps_msg is not None:
             self.magnetic_declination = self.nav_gps_msg.MagDeclination()
-
-        self.usfs.fetchEventStatus()
-        self.usfs.fetchSentralData()
-
-        if self.usfs.algo_status == 8:
-            status = 'locked'
-        else:
-            status = 'converging'
-        usfs_status = self.fb_builder.CreateString(status)
-
-        topics.nav.imu.imuStart(self.fb_builder)
-        topics.nav.imu.imuAddTime(self.fb_builder, time.time())
-        topics.nav.imu.imuAddStatus(self.fb_builder, usfs_status)
-        topics.nav.imu.imuAddRoll(self.fb_builder, self.usfs.angle[0,0])
-        topics.nav.imu.imuAddPitch(self.fb_builder, self.usfs.angle[1,0])
-        topics.nav.imu.imuAddYaw(self.fb_builder, self.usfs.heading + self.magnetic_declination)
-        topics.nav.imu.imuAddQuaternion0(self.fb_builder, self.usfs.qt[0,0])
-        topics.nav.imu.imuAddQuaternionX(self.fb_builder, self.usfs.qt[1,0])
-        topics.nav.imu.imuAddQuaternionY(self.fb_builder, self.usfs.qt[2,0])
-        topics.nav.imu.imuAddQuaternionZ(self.fb_builder, self.usfs.qt[3,0])
-        topics.nav.imu.imuAddAccelX(self.fb_builder, self.usfs.accel_data[0])
-        topics.nav.imu.imuAddAccelY(self.fb_builder, self.usfs.accel_data[1])
-        topics.nav.imu.imuAddAccelZ(self.fb_builder, self.usfs.accel_data[2])
-        topics.nav.imu.imuAddGyroX(self.fb_builder, self.usfs.gyro_data[0,0])
-        topics.nav.imu.imuAddGyroY(self.fb_builder, self.usfs.gyro_data[1,0])
-        topics.nav.imu.imuAddGyroZ(self.fb_builder, self.usfs.gyro_data[2,0])
-        topics.nav.imu.imuAddMagX(self.fb_builder, self.usfs.mag_data[0,0])
-        topics.nav.imu.imuAddMagY(self.fb_builder, self.usfs.mag_data[1,0])
-        topics.nav.imu.imuAddMagZ(self.fb_builder, self.usfs.mag_data[2,0])
-        topics.nav.imu.imuAddPressure(self.fb_builder, self.usfs.pressure)
-        topics.nav.imu.imuAddTemperature(self.fb_builder, self.usfs.temperature)
-
-        print('Status: {}'.format(status))
-        print('Roll: {:6.5f} deg'.format(self.usfs.angle[0,0]))
-        print('Pitch: {:6.5f} deg'.format(self.usfs.angle[1,0]))
-        print('Yaw: {:6.5f} deg'.format(self.usfs.heading + self.magnetic_declination))
-        print('Magnetic Declination: {:6.5f} deg'.format(self.magnetic_declination))
-        print('')
-
-        imu_msg = topics.nav.imu.imuEnd(self.fb_builder)
-        self.fb_builder.Finish(imu_msg)
-        bin_imu_msg = self.fb_builder.Output()
-        self.publish(b'nav.imu' + b' ' + bin_imu_msg)
-
-        time.sleep(0.1)
+        self.imu_sensor.fetchEventStatus()
+        self.imu_sensor.fetchSentralData()
+        self.set_message_nav_imu()
+        self.publish('nav.imu', self.msg)
 
 if __name__ == "__main__":
-    app = IMU()
-    app.run()
+    if len(sys.argv) < 2:
+        print("Expected a YAML configuration file... Exiting.")
+        sys.exit()
+    else:
+        config_file = sys.argv[1]
+    app_imu = AppIMU()
+    app_imu.set_name("app_imu")
+    app_imu.set_config(config_file)
+    app_imu.run()
