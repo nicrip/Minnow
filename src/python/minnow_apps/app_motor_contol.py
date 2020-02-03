@@ -16,40 +16,30 @@ from minnow_motor_control.HeadingControl import *
 from minnow_motor_control.SurgeSpeedControl import *
 from minnow_motor_control.PitchControl import *
 
-class MotorControl(App):
+class AppMotorControl(App):
     def __init__(self):
         super().__init__()
-        self.setup_subscribers()
-        # setup flatbuffers
-        self.fb_builder = flatbuffers.Builder(1024)
-        # setup motor controllers
-        self.speed_control_system = speed_controller()
-        self.heading_control_system = heading_controller()
-        self.pitch_control_system = pitch_controller()
-        # variables
+        self.builder = None
+        self.msg = None
         self.nav_imu_msg = None
+        self.speed_control_system = None
+        self.heading_control_system = None
+        self.pitch_control_system = None
+        self.desired_speed = None
+        self.desired_heading = None
+        self.desired_pitch = None
+        self.current_speed = None
+        self.current_heading = None
+        self.current_pitch = None
 
-        # This is for standalone troubleshooting of the python code ---------------------
-        self.desired_speed = 0.0
-        self.desired_heading = 280     # between 0 - 360
-        self.desired_pitch = 0.0       # Pitch down is positive
+    def nav_imu_callback(self):
+        print("Callback received for topic \"{}\"".format(topic))
+        if topic == "nav.imu":
+            self.nav_imu_msg = topics.nav.imu.imu.GetRootAsimu(msg, 0)
+        else:
+            print("Unknown message \"{}\"".format(topic))
 
-        self.current_speed = 0.0
-        self.current_heading = 120
-        self.current_pitch = 0.0
-        # -------------------------------------------------------------------------------
-
-        # Setting desired heading, speed, pitch and depth
-        self.heading_control_system.DesiredHeading(self.desired_heading) # this should be called only when desired heading is altered
-        self.pitch_control_system.DesiredPitch(self.desired_pitch) # this should be called only when desired heading is altered
-
-    def setup_subscribers(self):
-        self.subscribe('nav.imu', self.nav_imu_callback)    # subscribe to imu messages
-
-    def nav_imu_callback(self, msg):
-        self.nav_imu_msg = topics.nav.imu.imu.GetRootAsimu(msg, 0)
-
-    def process(self):
+    def set_message_motor_command(self):
         if self.nav_imu_msg is not None:
             self.current_heading = self.nav_imu_msg.Yaw()
             self.current_pitch = self.nav_imu_msg.Pitch()
@@ -66,25 +56,55 @@ class MotorControl(App):
 
         # Run heading controller
         (hdg_port_thrust,hdg_stbd_thrust)=self.heading_control_system.update(self.current_heading,pitch_mixed_speed_thrust)
-        
+
         #print(hdg_differential_thrust)
         print("Heading control port thrust: %f" % hdg_port_thrust)
         print("Heading control stbd thrust: %f" % hdg_stbd_thrust)
         print("Pitch control Upper thrust: %f" % upper_thrust)
         print('')
 
-        topics.motor.command.commandStart(self.fb_builder)
-        topics.motor.command.commandAddTime(self.fb_builder, time.time())
-        topics.motor.command.commandAddMotor1Command(self.fb_builder, hdg_port_thrust)
-        topics.motor.command.commandAddMotor2Command(self.fb_builder, hdg_stbd_thrust)
-        topics.motor.command.commandAddMotor3Command(self.fb_builder, -1*upper_thrust)
-        motor_msg = topics.motor.command.commandEnd(self.fb_builder)
-        self.fb_builder.Finish(motor_msg)
-        bin_motor_msg = self.fb_builder.Output()
-        self.publish(b'motor.command' + b' ' + bin_motor_msg)
+        topics.motor.command.commandStart(self.builder)
+        topics.motor.command.commandAddTime(self.builder, time.time())
+        topics.motor.command.commandAddMotorPortCommand(self.builder, hdg_port_thrust)
+        topics.motor.command.commandAddMotorStarboardCommand(self.builder, hdg_stbd_thrust)
+        topics.motor.command.commandAddMotorUpperCommand(self.builder, -1*upper_thrust)
+        motor_msg = topics.motor.command.commandEnd(self.builder)
+        self.builder.Finish(motor_msg)
+        self.msg = self.builder.Output()
 
-        time.sleep(0.1)
+    def init(self):
+        tick = self.get_config_parameter(int, "tick")
+        self.set_hz(tick)
+
+        self.subscribe('nav.imu', self.nav_imu_callback)                        # subscribe to imu messages
+
+        self.desired_speed = self.get_config_parameter(float, "desired_speed")
+        self.desired_heading = self.get_config_parameter(float, "desired_heading")
+        self.desired_pitch = self.get_config_parameter(float, "desired_pitch")
+
+        self.current_speed = 0.0
+        self.current_heading = 0.0
+        self.current_pitch = 0.0
+        self.speed_control_system = speed_controller()
+        self.heading_control_system = heading_controller()
+        self.pitch_control_system = pitch_controller()
+        # Setting desired heading, speed, pitch and depth
+        self.heading_control_system.DesiredHeading(self.desired_heading)        # this should be called only when desired heading is altered
+        self.pitch_control_system.DesiredPitch(self.desired_pitch)              # this should be called only when desired heading is altered
+
+        self.builder = flatbuffers.Builder(1024)
+
+    def process(self):
+        self.set_message_motor_command()
+        self.publish('motor.command', self.msg)
 
 if __name__ == "__main__":
-    app = MotorControl()
-    app.run()
+    if len(sys.argv) < 2:
+        print("Expected a YAML configuration file... Exiting.")
+        sys.exit()
+    else:
+        config_file = sys.argv[1]
+    app_motor_control = AppMotorControl()
+    app_motor_control.set_name("app_motor_control")
+    app_motor_control.set_config(config_file)
+    app_motor_control.run()

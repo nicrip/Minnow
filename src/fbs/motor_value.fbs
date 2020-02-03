@@ -2,9 +2,9 @@ namespace topics.motor;
 
 table value {
   time:double;
-  motor_1_value:float;
-  motor_2_value:float;
-  motor_3_value:float;
+  motor_port_value:float;
+  motor_starboard_value:float;
+  motor_upper_value:float;
 }
 
 root_type value;

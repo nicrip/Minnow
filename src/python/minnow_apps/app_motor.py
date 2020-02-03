@@ -14,47 +14,100 @@ import topics.motor.value
 # PWM library
 from Adafruit_BBIO import PWM
 
-class Motor(App):
+class AppMotor(App):
     def __init__(self):
         super().__init__()
-        self.setup_subscribers()
-        # setup flatbuffers
-        self.fb_builder = flatbuffers.Builder(1024)
-        # variables
+        self.builder = None
+        self.msg = None
         self.motor_command_msg = None
-        self.motor_1_command = 0.0
-        self.motor_2_command = 0.0
-        self.motor_3_command = 0.0
-        #setup motors
-        self.pwm_freq = 8000.0                                                  #8000 Hz max for BlueRobotics ESC
-        self.pwm_stop = 1500                                                    #motor esc stops at 1500 microseconds
-        PWM.start("P9_21", self.pwm_stop/(1e6/self.pwm_freq), self.pwm_freq)    #motor 1 beaglebone PWM pin
-        PWM.start("P9_22", self.pwm_stop/(1e6/self.pwm_freq), self.pwm_freq)    #motor 2 beaglebone PWM pin
-        PWM.start("P9_16", self.pwm_stop/(1e6/self.pwm_freq), self.pwm_freq)    #motor 3 beaglebone PWM pin
-        #check BlueRobotics website for current draw - https://bluerobotics.com/store/thrusters/t100-t200-thrusters/t200-thruster/
-        #limit ourselves to ~6.5A
-        self.pwm_min = 1275                                                     #max reverse microseconds pwm value
-        self.pwm_max = 1725                                                     #max forward microseconds pwm value
-        self.pwm_deadband = 40                                                  #deadband around 1500 microseconds of 40 microseconds
-        self.command_min = -80.0
-        self.command_max = 80.0
-        self.command_deadband = 2.0
+        self.motor_port_command = None
+        self.motor_starboard_command = None
+        self.motor_upper_command = None
+        self.pwm_freq = None                                                    #8000 Hz max for BlueRobotics ESC
+        self.pwm_stop = None                                                    #motor esc stops at 1500 microseconds
+        self.pwm_min = None                                                     #max reverse microseconds pwm value
+        self.pwm_max = None                                                     #max forward microseconds pwm value
+        self.pwm_deadband = None                                                #deadband around 1500 microseconds of 40 microseconds
+        self.command_min = None
+        self.command_max = None
+        self.command_deadband = None
+
+    def motor_command_callback(self, msg, topic):
+        print("Callback received for topic \"{}\"".format(topic))
+        if topic == "motor.command":
+            self.motor_command_msg = topics.nav.gps.gps.GetRootAsgps(msg, 0)
+            self.motor_port_command = self.motor_command_msg.MotorPortCommand()
+            self.motor_starboard_command = self.motor_command_msg.MotorStarboardCommand()
+            self.motor_upper_command = self.motor_command_msg.MotorUpperCommand()
+        else:
+            print("Unknown message \"{}\"".format(topic))
+
+    def set_message_motor_value(self):
+        # limit motor commands and map to pwm values
+        if self.motor_port_command < self.command_min:
+            self.motor_port_command = self.command_min
+        if self.motor_port_command > self.command_max:
+            self.motor_port_command = self.command_max
+        motor_port_pwm = self.map_command_to_pwm(self.motor_port_command)
+        if self.motor_starboard_command < self.command_min:
+            self.motor_starboard_command = self.command_min
+        if self.motor_starboard_command > self.command_max:
+            self.motor_starboard_command = self.command_max
+        motor_starboard_pwm = self.map_command_to_pwm(self.motor_starboard_command)
+        if self.motor_upper_command < self.command_min:
+            self.motor_upper_command = self.command_min
+        if self.motor_upper_command > self.command_max:
+            self.motor_upper_command = self.command_max
+        motor_upper_pwm = self.map_command_to_pwm(self.motor_upper_command)
+        #set duty cycles
+        PWM.set_duty_cycle(self.motor_port_pin, motor_port_pwm)
+        PWM.set_duty_cycle(self.motor_starboard_pin, motor_starboard_pin)
+        PWM.set_duty_cycle(self.motor_upper_pin, motor_upper_pwm)
+
+        topics.motor.value.valueStart(self.builder)
+        topics.motor.value.valueAddTime(self.builder, time.time())
+        topics.motor.value.valueAddMotorPortValue(self.builder, motor_port_pwm)
+        topics.motor.value.valueAddMotorStarboardValue(self.builder, motor_starboard_pin)
+        topics.motor.value.valueAddMotorUpperValue(self.builder, motor_upper_pwm)
+
+        print('Motor port value: {:6.3f}'.format(motor_port_pwm))
+        print('Motor starboard value: {:6.3f}'.format(motor_starboard_pin))
+        print('Motor upper value: {:6.3f}'.format(motor_upper_pwm))
+        print('')
+
+        value_msg = topics.motor.value.valueEnd(self.builder)
+        self.builder.Finish(value_msg)
+        self.msg = self.builder.Output()
+
+    def init(self):
+        tick = self.get_config_parameter(int, "tick")
+        self.set_hz(tick)
+
+        self.subscribe('motor.command', self.motor_command_callback)            # subscribe to motor command messages
+
+        self.motor_port_pin = self.get_config_parameter(str, "motor_port_pin")
+        self.motor_starboard_pin = self.get_config_parameter(str, "motor_starboard_pin")
+        self.motor_upper_pin = self.get_config_parameter(str, "motor_upper_pin")
+        self.pwm_freq = self.get_config_parameter(float, "pwm_freq")
+        self.pwm_stop = self.get_config_parameter(float, "pwm_stop")
+        self.pwm_min = self.get_config_parameter(float, "pwm_min")
+        self.pwm_max = self.get_config_parameter(float, "pwm_max")
+        self.pwm_deadband = self.get_config_parameter(float, "pwm_deadband")
+        self.command_min = self.get_config_parameter(float, "command_min")
+        self.command_max = self.get_config_parameter(float, "command_max")
+        self.command_deadband = self.get_config_parameter(float, "command_deadband")
+
+        PWM.start(self.motor_port_pin, self.pwm_stop/(1e6/self.pwm_freq), self.pwm_freq)
+        PWM.start(self.motor_starboard_pin, self.pwm_stop/(1e6/self.pwm_freq), self.pwm_freq)
+        PWM.start(self.motor_upper_pin, self.pwm_stop/(1e6/self.pwm_freq), self.pwm_freq)
         time.sleep(10.0)
 
-    def setup_subscribers(self):
-        self.subscribe('motor.command', self.motor_command_callback)    # subscribe to motor command messages
-
-    def motor_command_callback(self, msg):
-        self.motor_command_msg = topics.motor.command.command.GetRootAscommand(msg, 0)
-        self.motor_1_command = self.motor_command_msg.Motor1Command()
-        self.motor_2_command = self.motor_command_msg.Motor2Command()
-        self.motor_3_command = self.motor_command_msg.Motor3Command()
+        self.builder = flatbuffers.Builder(1024)
 
     def exit_signal(self, sig, frame):
-        print('You pressed Ctrl+C!')
-        PWM.stop("P9_21")
-        PWM.stop("P9_22")
-        PWM.stop("P9_16")
+        PWM.stop(self.motor_port_pin)
+        PWM.stop(self.motor_starboard_pin)
+        PWM.stop(self.motor_upper_pin)
         PWM.cleanup()
         super().exit_signal()
 
@@ -69,51 +122,22 @@ class Motor(App):
             pwm_val_us = pwm_val*(1e6/self.pwm_freq)
             if abs(pwm_val_us - self.pwm_stop) <= self.pwm_deadband:            #if pwm mapping is within pwm deadband, push outside pwm deadband
                 if abs(pwm_val_us - (self.pwm_stop - self.pwm_deadband)) < abs(pwm_val_us - (self.pwm_stop + self.pwm_deadband)):
-                    pwm_val = (self.pwm_stop-40)/(1e6/self.pwm_freq)
+                    pwm_val = (self.pwm_stop-self.pwm_deadband)/(1e6/self.pwm_freq)
                 else:
-                    pwm_val = (self.pwm_stop+40)/(1e6/self.pwm_freq)
+                    pwm_val = (self.pwm_stop+self.pwm_deadband)/(1e6/self.pwm_freq)
             return pwm_val
 
     def process(self):
-        # limit motor commands and map to pwm values
-        if self.motor_1_command < self.command_min:
-            self.motor_1_command = self.command_min
-        if self.motor_1_command > self.command_max:
-            self.motor_1_command = self.command_max
-        motor_1_pwm = self.map_command_to_pwm(self.motor_1_command)
-        if self.motor_2_command < self.command_min:
-            self.motor_2_command = self.command_min
-        if self.motor_2_command > self.command_max:
-            self.motor_2_command = self.command_max
-        motor_2_pwm = self.map_command_to_pwm(self.motor_2_command)
-        if self.motor_3_command < self.command_min:
-            self.motor_3_command = self.command_min
-        if self.motor_3_command > self.command_max:
-            self.motor_3_command = self.command_max
-        motor_3_pwm = self.map_command_to_pwm(self.motor_3_command)
-        #set duty cycles
-        PWM.set_duty_cycle("P9_21", motor_1_pwm)
-        PWM.set_duty_cycle("P9_22", motor_2_pwm)
-        PWM.set_duty_cycle("P9_16", motor_3_pwm)
-
-        topics.motor.value.valueStart(self.fb_builder)
-        topics.motor.value.valueAddTime(self.fb_builder, time.time())
-        topics.motor.value.valueAddMotor1Value(self.fb_builder, motor_1_pwm)
-        topics.motor.value.valueAddMotor2Value(self.fb_builder, motor_2_pwm)
-        topics.motor.value.valueAddMotor3Value(self.fb_builder, motor_3_pwm)
-
-        print('Motor 1 value: {:6.3f}'.format(motor_1_pwm))
-        print('Motor 2 value: {:6.3f}'.format(motor_2_pwm))
-        print('Motor 3 value: {:6.3f}'.format(motor_3_pwm))
-        print('')
-
-        value_msg = topics.motor.value.valueEnd(self.fb_builder)
-        self.fb_builder.Finish(value_msg)
-        bin_value_msg = self.fb_builder.Output()
-        self.publish(b'motor.value' + b' ' + bin_value_msg)
-
-        time.sleep(0.1)
+        self.set_message_motor_value()
+        self.publish('motor.value', self.msg)
 
 if __name__ == "__main__":
-    app = Motor()
-    app.run()
+    if len(sys.argv) < 2:
+        print("Expected a YAML configuration file... Exiting.")
+        sys.exit()
+    else:
+        config_file = sys.argv[1]
+    app_motor = AppMotor()
+    app_motor.set_name("app_motor")
+    app_motor.set_config(config_file)
+    app_motor.run()

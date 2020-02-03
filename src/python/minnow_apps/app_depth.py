@@ -40,8 +40,8 @@ class AppDepth(App):
         tick = self.get_config_parameter(int, "tick")
         self.set_hz(tick)
 
-        fluid_density = self.get_config_parameter(float, "fluid_density");
-        oversampling = self.get_config_parameter(int, "oversampling");
+        fluid_density = self.get_config_parameter(float, "fluid_density")
+        oversampling = self.get_config_parameter(int, "oversampling")
         self.depth_sensor = pyMS5837.MS5837(2, model=pyMS5837.MODEL_30BA, fluid_density=fluid_density, oversampling=oversampling)
 
         self.builder = flatbuffers.Builder(1024)
