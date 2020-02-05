@@ -48,6 +48,7 @@ startWifi () {
         dhclient -v -r
     # make really sure
         killall dhclient
+        iwlist $wlan scan
         ifconfig $wlan up
         iwconfig $wlan essid $essid
         dhclient -v $wlan
