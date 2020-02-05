@@ -106,6 +106,14 @@ Make this script executable using:
 
 And reboot - the script should run automatically, and be visibile as "wifi" when you run ps -A !!!!
 
+You can confirm that the script properly reconnects automatically by running:
+
+```
+> sudo ifconfig wlan0 down
+```
+
+Eventually, the Beaglebone will reconnect automatically to the network.
+
 If there are issues, you may need to check that the rc-local service is running. Use:
 
 ```
