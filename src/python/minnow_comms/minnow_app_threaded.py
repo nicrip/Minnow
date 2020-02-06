@@ -32,10 +32,9 @@ class Subscriber(Thread):
             evts = poller.poll(1000)
             if evts:
                 message = subscriber.recv()
-                msg_str = message.decode('UTF-8')
 
-                topic_msg = msg_str.split('_',1)
-                topic = topic_msg[0]
+                topic_msg = message.split(b'_',1)
+                topic = topic_msg[0].decode('UTF-8')
                 if topic == self.topic_:
                     self.mutex_.acquire()
                     self.new_msg_ = True
@@ -104,10 +103,9 @@ class App:
                 print("[M] New message from {}.".format(subscriber.topic_))
                 subscriber.mutex_.acquire()
                 subscriber.new_msg_ = False
-                msg_str = subscriber.msg_.decode('UTF-8')
+                topic_msg = subscriber.msg_.split(b'_',1)
                 subscriber.mutex_.release()
-                topic_msg = msg_str.split('_',1)
-                topic = topic_msg[0]
+                topic = topic_msg[0].decode('UTF-8')
                 msg = topic_msg[1]
                 subscriber.callback_(msg, topic)
         self.mutex_.release()

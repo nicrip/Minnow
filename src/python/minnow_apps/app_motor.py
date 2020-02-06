@@ -35,7 +35,7 @@ class AppMotor(App):
     def motor_command_callback(self, msg, topic):
         print("Callback received for topic \"{}\"".format(topic))
         if topic == "motor.command":
-            self.motor_command_msg = topics.nav.gps.gps.GetRootAsgps(msg, 0)
+            self.motor_command_msg = topics.motor.command.command.GetRootAscommand(msg, 0)
             self.motor_port_command = self.motor_command_msg.MotorPortCommand()
             self.motor_starboard_command = self.motor_command_msg.MotorStarboardCommand()
             self.motor_upper_command = self.motor_command_msg.MotorUpperCommand()
