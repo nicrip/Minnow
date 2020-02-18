@@ -10,7 +10,7 @@ app_gps:
   tick: 10
 
 app_imu:
-  tick: 100
+  tick: 500
 
 app_motor:
   tick: 100
@@ -19,8 +19,8 @@ app_motor:
   motor_upper_pin: P9_16
   pwm_freq: 8000
   pwm_stop: 1500
-  pwm_min: 1275
-  pwm_max: 1725
+  pwm_min: 1125
+  pwm_max: 1875
   pwm_deadband: 40
   command_min: -80
   command_max: 80
@@ -31,4 +31,3 @@ app_motor_control:
   desired_speed: 0
   desired_heading: 280
   desired_pitch: 0
-  
