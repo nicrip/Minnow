@@ -42,7 +42,7 @@ class AppIMU(App):
         topics.nav.imu.imuAddStatus(self.builder, imu_sensor_status)
         topics.nav.imu.imuAddRoll(self.builder, self.imu_sensor.angle[0,0])
         topics.nav.imu.imuAddPitch(self.builder, self.imu_sensor.angle[1,0])
-        topics.nav.imu.imuAddYaw(self.builder, self.imu_sensor.heading + self.magnetic_declination)
+        topics.nav.imu.imuAddYaw(self.builder, self.imu_sensor.heading)
         topics.nav.imu.imuAddQuaternion0(self.builder, self.imu_sensor.qt[0,0])
         topics.nav.imu.imuAddQuaternionX(self.builder, self.imu_sensor.qt[1,0])
         topics.nav.imu.imuAddQuaternionY(self.builder, self.imu_sensor.qt[2,0])
@@ -62,7 +62,7 @@ class AppIMU(App):
         print('Status: {}'.format(status))
         print('Roll: {:6.5f} deg'.format(self.imu_sensor.angle[0,0]))
         print('Pitch: {:6.5f} deg'.format(self.imu_sensor.angle[1,0]))
-        print('Yaw: {:6.5f} deg'.format(self.imu_sensor.heading + self.magnetic_declination))
+        print('Yaw: {:6.5f} deg'.format(self.imu_sensor.heading))
         print('Magnetic Declination: {:6.5f} deg'.format(self.magnetic_declination))
         print('')
 
@@ -83,6 +83,7 @@ class AppIMU(App):
     def process(self):
         if self.nav_gps_msg is not None:
             self.magnetic_declination = self.nav_gps_msg.MagDeclination()
+            self.imu_sensor.magnetic_declination = self.magnetic_declination
         self.imu_sensor.fetchEventStatus()
         self.imu_sensor.fetchSentralData()
         self.set_message_nav_imu()
