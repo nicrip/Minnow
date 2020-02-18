@@ -28,3 +28,7 @@
 	path = src/cpp/minnow_drivers/cppZOEM8
 	url = https://github.com/nicrip/cppZOEM8
 	branch = lib
+[submodule "src/cpp/minnow_drivers/cppUSFS"]
+	path = src/cpp/minnow_drivers/cppUSFS
+	url = https://github.com/nicrip/cppUSFS.git
+	branch = lib

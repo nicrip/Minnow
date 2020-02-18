@@ -7,3 +7,4 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUNIX -D_LINUX=1 -DCMDLINE=1")
 
 add_subdirectory(cppMS5837)
 add_subdirectory(cppZOEM8)
+add_subdirectory(cppUSFS)
