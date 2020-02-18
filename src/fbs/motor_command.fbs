@@ -1,0 +1,10 @@
+namespace topics.motor;
+
+table command {
+  time:double;
+  motor_port_command:float;
+  motor_starboard_command:float;
+  motor_upper_command:float;
+}
+
+root_type command;

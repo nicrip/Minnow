@@ -1,0 +1,34 @@
+[submodule "src/python/minnow_drivers/pyUSFS"]
+	path = src/python/minnow_drivers/pyUSFS
+	url = https://github.com/nicrip/pyUSFS.git
+	branch = ST
+[submodule "src/python/minnow_drivers/pyMS5837"]
+	path = src/python/minnow_drivers/pyMS5837
+	url = https://github.com/nicrip/pyMS5837.git
+[submodule "src/python/minnow_drivers/pyZOEM8"]
+	path = src/python/minnow_drivers/pyZOEM8
+	url = https://github.com/nicrip/pyZOEM8.git
+[submodule "src/cpp/cppzmq"]
+	path = src/cpp/external/cppzmq
+	url = https://github.com/zeromq/cppzmq
+[submodule "src/cpp/yaml-cpp"]
+	path = src/cpp/external/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp
+[submodule "src/cpp/flatbuffers"]
+	path = src/cpp/external/flatbuffers
+	url = https://github.com/google/flatbuffers.git
+[submodule "src/cpp/libi2c"]
+	path = src/cpp/external/libi2c
+	url = https://github.com/amaork/libi2c
+[submodule "src/cpp/minnow_drivers/cppMS5837"]
+	path = src/cpp/minnow_drivers/cppMS5837
+	url = https://github.com/nicrip/cppMS5837
+	branch = lib
+[submodule "src/cpp/minnow_drivers/cppZOEM8"]
+	path = src/cpp/minnow_drivers/cppZOEM8
+	url = https://github.com/nicrip/cppZOEM8
+	branch = lib
+[submodule "src/cpp/minnow_drivers/cppUSFS"]
+	path = src/cpp/minnow_drivers/cppUSFS
+	url = https://github.com/nicrip/cppUSFS.git
+	branch = lib

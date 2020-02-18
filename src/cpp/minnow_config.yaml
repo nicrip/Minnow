@@ -1,0 +1,33 @@
+protocol: ipc
+host: /home/debian/Minnow/src/cpp/minnow_comms/minnow
+
+app_depth:
+  tick: 100
+  fluid_density: 997
+  oversampling: 1
+
+app_gps:
+  tick: 10
+
+app_imu:
+  tick: 500
+
+app_motor:
+  tick: 100
+  motor_port_pin: P9_21
+  motor_starboard_pin: P9_22
+  motor_upper_pin: P9_16
+  pwm_freq: 8000
+  pwm_stop: 1500
+  pwm_min: 1125
+  pwm_max: 1875
+  pwm_deadband: 40
+  command_min: -80
+  command_max: 80
+  command_deadband: 2
+
+app_motor_control:
+  tick: 100
+  desired_speed: 0
+  desired_heading: 280
+  desired_pitch: 0
