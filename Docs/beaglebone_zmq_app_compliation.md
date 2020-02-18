@@ -1,4 +1,4 @@
-# Compiling Mezzo ZMQ+Flatbuffer Apps on Beaglebone
+# Compiling Metà ZMQ+Flatbuffer Apps on Beaglebone
 
 Compilation requires some modifications to the normal apps. 
 
@@ -15,7 +15,7 @@ zmq::poll(&p[0], 1, 1000);
 #### YAML-CPP must be built as shared libraries using:  
 cmake .. -DYAML_BUILD_SHARED_LIBS=ON
 
-#### Subclasses of the Mezzo App
+#### Subclasses of the Metà App
 Callbacks using flatbuffers must cast the message into a string as:  
 
 std::string msg_str(msg, msg+msg_size); // required for beaglebone  
@@ -25,7 +25,7 @@ instead of:
 
 auto topic1 = topics::nav::Gettopic1(msg);  
 
-#### Finally, compilation of the Mezzo Apps
+#### Finally, compilation of the Metà Apps
 Must be performed as:  
 
 CXX_FLAGS="-fPIE -fPIC" \
