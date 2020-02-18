@@ -22,3 +22,12 @@ ADD_EXECUTABLE(app_gps ${SRC})
 TARGET_LINK_LIBRARIES(app_gps minnow_app -lyaml-cpp -lzmq -lpthread ZOEM8)
 install(TARGETS app_gps DESTINATION ${project_BIN_DIR}/)
 ###
+
+### metà App IMU
+SET(SRC
+  app_imu.cpp
+)
+ADD_EXECUTABLE(app_imu ${SRC})
+TARGET_LINK_LIBRARIES(app_imu minnow_app -lyaml-cpp -lzmq -lpthread USFS)
+install(TARGETS app_imu DESTINATION ${project_BIN_DIR}/)
+###
