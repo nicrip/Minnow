@@ -32,7 +32,7 @@ class AppMotorControl(App):
         self.current_heading = None
         self.current_pitch = None
 
-    def nav_imu_callback(self):
+    def nav_imu_callback(self, msg, topic):
         print("Callback received for topic \"{}\"".format(topic))
         if topic == "nav.imu":
             self.nav_imu_msg = topics.nav.imu.imu.GetRootAsimu(msg, 0)

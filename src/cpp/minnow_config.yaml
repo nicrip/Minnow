@@ -11,6 +11,10 @@ app_gps:
 
 app_imu:
   tick: 500
+  euler_offset:
+    - [ 0.0,  1.0,  0.0]
+    - [-1.0,  0.0,  0.0]
+    - [ 0.0,  0.0,  1.0]
 
 app_motor:
   tick: 100
