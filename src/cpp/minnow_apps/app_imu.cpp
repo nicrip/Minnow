@@ -1,5 +1,6 @@
 #include <iostream>
 #include <sstream>
+#include <math.h>
 #include <zmq.hpp>
 #include "flatbuffers/flatbuffers.h"
 #include "../minnow_comms/minnow_app_threaded.h"
@@ -28,6 +29,10 @@ private:
   unsigned int msg_size;
   USFS imu_sensor;
   double mag_declination = -14.42; // magnetic declination at MIT
+  std::vector<std::vector<double>> euler_offset;
+  double psi, theta, phi, sy, roll, pitch, yaw;
+  double R_00, R_01, R_02, R_10, R_11, R_12, R_20, R_21, R_22;
+  double N_00, N_01, N_02, N_10, N_11, N_12, N_20, N_21, N_22;
 };
 
 AppIMU::AppIMU() {
@@ -67,6 +72,40 @@ void AppIMU::SetMessageNavIMU() {
   }
   auto str_status = builder->CreateString(status);
 
+  // apply euler offset to roll, pitch and yaw
+  psi = (imu_sensor.angle[0])*M_PI/180.0;
+  theta =(imu_sensor.angle[1])*M_PI/180.0;
+  phi = (imu_sensor.heading)*M_PI/180.0;
+  R_00 = cos(theta)*cos(phi);
+  R_01 = sin(psi)*sin(theta)*cos(phi) - cos(psi)*sin(phi);
+  R_02 = cos(psi)*sin(theta)*cos(phi) + sin(psi)*sin(phi);
+  R_10 = cos(theta)*sin(phi);
+  R_11 = sin(psi)*sin(theta)*sin(phi) + cos(psi)*cos(phi);
+  R_12 = cos(psi)*sin(theta)*sin(phi) - sin(psi)*cos(phi);
+  R_20 = -sin(theta);
+  R_21 = sin(psi)*cos(theta);
+  R_22 = cos(psi)*cos(theta);
+  N_00 = euler_offset[0][0]*R_00 + euler_offset[1][0]*R_01 + euler_offset[2][0]*R_02;
+  N_01 = euler_offset[0][1]*R_00 + euler_offset[1][1]*R_01 + euler_offset[2][1]*R_02;
+  N_02 = euler_offset[0][2]*R_00 + euler_offset[1][2]*R_01 + euler_offset[2][2]*R_02;
+  N_10 = euler_offset[0][0]*R_10 + euler_offset[1][0]*R_11 + euler_offset[2][0]*R_12;
+  N_11 = euler_offset[0][1]*R_10 + euler_offset[1][1]*R_11 + euler_offset[2][1]*R_12;
+  N_12 = euler_offset[0][2]*R_10 + euler_offset[1][2]*R_11 + euler_offset[2][2]*R_12;
+  N_20 = euler_offset[0][0]*R_20 + euler_offset[1][0]*R_21 + euler_offset[2][0]*R_22;
+  N_21 = euler_offset[0][1]*R_20 + euler_offset[1][1]*R_21 + euler_offset[2][1]*R_22;
+  N_22 = euler_offset[2][2]*R_20 + euler_offset[1][2]*R_21 + euler_offset[2][2]*R_22;
+  sy = sqrt(N_00*N_00 + N_10*N_10);
+  if(sy >= 1e-6) {
+    roll = (atan2(N_21, N_22))*180.0/M_PI;
+    pitch = (atan2(-N_20, sy))*180.0/M_PI;
+    yaw = (atan2(N_10, N_00))*180.0/M_PI;
+  } else {
+    roll = (atan2(-N_12, N_11))*180.0/M_PI;
+    pitch = (atan2(-N_20, sy))*180.0/M_PI;
+    yaw = 0.0;
+  }
+  if(yaw < 0.0) yaw += 360.0;
+
   topics::nav::imuBuilder imu_builder(*builder);
   imu_builder.add_time(utc);
   imu_builder.add_status(str_status);
@@ -99,12 +138,14 @@ void AppIMU::Init() {
   unsigned int tick = GetConfigParameter<unsigned int>("tick");
   SetHz(tick);
 
+  // subscribe for nav.gps messages to get magnetic declination
+  Subscribe("nav.gps", [this](uint8_t* msg, size_t msg_size, std::string topic){CallBack(msg, msg_size, topic);});
+
+  euler_offset = GetConfigParameter<std::vector<std::vector<double>>>("euler_offset");
+
   imu_sensor.initSensors();
 
   builder = new flatbuffers::FlatBufferBuilder();
-
-  // subscribe for nav.gps messages to get magnetic declination
-  Subscribe("nav.gps", [this](uint8_t* msg, size_t msg_size, std::string topic){CallBack(msg, msg_size, topic);});
 }
 
 void AppIMU::Process() {

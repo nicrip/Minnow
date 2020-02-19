@@ -4,6 +4,7 @@
 import sys
 import zmq
 import time
+import math
 # minnow comms
 from minnow_comms.minnow_app_threaded import App
 # flatbuffer serialization
@@ -21,7 +22,8 @@ class AppIMU(App):
         self.msg = None
         self.imu_sensor = None
         self.nav_gps_msg = None
-        self.magnetic_declination = None
+        self.magnetic_declination = -14.42; # magnetic declination at MIT
+        self.euler_offset = None
 
     def nav_gps_callback(self, msg, topic):
         print("Callback received for topic \"{}\"".format(topic))
@@ -36,6 +38,39 @@ class AppIMU(App):
         else:
             status = 'converging'
         imu_sensor_status = self.builder.CreateString(status)
+
+        psi = math.radians(self.imu_sensor.angle[0,0])
+        theta = math.radians(self.imu_sensor.angle[1,0])
+        phi = math.radians(self.imu_sensor.heading)
+        R_00 = math.cos(theta)*math.cos(phi)
+        R_01 = math.sin(psi)*math.sin(theta)*math.cos(phi) - math.cos(psi)*math.sin(phi)
+        R_02 = math.cos(psi)*math.sin(theta)*math.cos(phi) + math.sin(psi)*math.sin(phi)
+        R_10 = math.cos(theta)*math.sin(phi)
+        R_11 = math.sin(psi)*math.sin(theta)*math.sin(phi) + math.cos(psi)*math.cos(phi)
+        R_12 = math.cos(psi)*math.sin(theta)*math.sin(phi) - math.sin(psi)*math.cos(phi)
+        R_20 = -math.sin(theta)
+        R_21 = math.sin(psi)*math.cos(theta)
+        R_22 = math.cos(psi)*math.cos(theta)
+        N_00 = self.euler_offset[0][0]*R_00 + self.euler_offset[1][0]*R_01 + self.euler_offset[2][0]*R_02
+        N_01 = self.euler_offset[0][1]*R_00 + self.euler_offset[1][1]*R_01 + self.euler_offset[2][1]*R_02
+        N_02 = self.euler_offset[0][2]*R_00 + self.euler_offset[1][2]*R_01 + self.euler_offset[2][2]*R_02
+        N_10 = self.euler_offset[0][0]*R_10 + self.euler_offset[1][0]*R_11 + self.euler_offset[2][0]*R_12
+        N_11 = self.euler_offset[0][1]*R_10 + self.euler_offset[1][1]*R_11 + self.euler_offset[2][1]*R_12
+        N_12 = self.euler_offset[0][2]*R_10 + self.euler_offset[1][2]*R_11 + self.euler_offset[2][2]*R_12
+        N_20 = self.euler_offset[0][0]*R_20 + self.euler_offset[1][0]*R_21 + self.euler_offset[2][0]*R_22
+        N_21 = self.euler_offset[0][1]*R_20 + self.euler_offset[1][1]*R_21 + self.euler_offset[2][1]*R_22
+        N_22 = self.euler_offset[2][2]*R_20 + self.euler_offset[1][2]*R_21 + self.euler_offset[2][2]*R_22
+        sy = math.sqrt(N_00*N_00 + N_10*N_10)
+        if sy >= 1e-6:
+            roll = math.degrees(math.atan2(N_21, N_22))
+            pitch = math.degrees(math.atan2(-N_20, sy))
+            yaw = math.degrees(math.atan2(N_10, N_00))
+        else:
+            roll = math.degrees(math.atan2(-N_12, N_11))
+            pitch = math.degrees(math.atan2(-N_20, sy))
+            yaw = 0.0
+        if yaw < 0.0:
+            yaw += 360.0
 
         topics.nav.imu.imuStart(self.builder)
         topics.nav.imu.imuAddTime(self.builder, time.time())
@@ -74,7 +109,9 @@ class AppIMU(App):
         tick = self.get_config_parameter(int, "tick")
         self.set_hz(tick)
 
-        self.subscribe('nav.gps', self.nav_gps_callback)    # subscribe to gps messages
+        self.subscribe('nav.gps', self.nav_gps_callback)    # subscribe to nav.gps messages to get magnetic declination
+
+        self.euler_offset = self.get_config_parameter(list, "euler_offset")
 
         self.imu_sensor = pyUSFS.USFS(2, calibrate=True)
 
