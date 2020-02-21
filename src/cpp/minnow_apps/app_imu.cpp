@@ -3,12 +3,12 @@
 #include <math.h>
 #include <zmq.hpp>
 #include "flatbuffers/flatbuffers.h"
-#include "../minnow_comms/minnow_app_threaded.h"
+#include "minnow_comms/minnow_app_threaded.h"
 // flatbuffer topics
-#include "../topics/nav_gps_generated.h"
-#include "../topics/nav_imu_generated.h"
+#include "topics/nav_gps_generated.h"
+#include "topics/nav_imu_generated.h"
 // imu driver USFS
-#include "../minnow_drivers/cppUSFS/cppUSFS.h"
+#include "minnow_drivers/cppUSFS/cppUSFS.h"
 
 class AppIMU : public App
 {

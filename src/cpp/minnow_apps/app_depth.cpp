@@ -2,11 +2,11 @@
 #include <sstream>
 #include <zmq.hpp>
 #include "flatbuffers/flatbuffers.h"
-#include "../minnow_comms/minnow_app_threaded.h"
+#include "minnow_comms/minnow_app_threaded.h"
 // flatbuffer topics
-#include "../topics/nav_depth_generated.h"
+#include "topics/nav_depth_generated.h"
 // depth driver MS5837
-#include "../minnow_drivers/cppMS5837/cppMS5837.h"
+#include "minnow_drivers/cppMS5837/cppMS5837.h"
 
 class AppDepth : public App
 {
