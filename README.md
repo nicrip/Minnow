@@ -1,2 +1,1 @@
-# Minnow
-Initial testing of custom vehicle
+# Minnow using Metà
